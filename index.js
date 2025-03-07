@@ -1,7 +1,16 @@
 import mongoose from "mongoose";
-import Users from "./model/users";
+import dotenv from "dotenv";
+import Users from "./model/users.js";
 
-mongoose.connect("mongodb+srv://Jaron Hiatt:yKdEL1LxETQqGPSz@cluster0.g3l7o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
+dotenv.config();  
+
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => {
+        console.log("MongoDB connected successfully.");
+    })
+    .catch(err => {
+        console.error("MongoDB connection error:", err);
+    });
 
 const user = new Users({
     "username": "hobbylover123",
@@ -14,5 +23,15 @@ const user = new Users({
             "status": "matched"
         }
     ],
-    "createdAt": "2025-02-27T15:30:00Z" 
-})
+    "createdAt": "2025-02-27T15:30:00Z"
+});
+
+user.save()
+    .then(() => {
+        console.log("User saved successfully!");
+        mongoose.connection.close(); 
+    })
+    .catch(err => {
+        console.error("Error saving user:", err);
+        mongoose.connection.close();
+    });

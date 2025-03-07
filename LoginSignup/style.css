@@ -111,3 +111,29 @@ form button{
 form button:hover{
     background-color: var(--text-color);
 }
+form button:focus{
+    outline: none;
+    background-color: var(--text-color);
+}
+a{
+    text-decoration: none;
+    color: var(--accent-color);
+}
+a:hover{
+    text-decoration: underline;
+}
+@media(max-width: 1100px){
+    .wrapper{
+        width: min(600px, 100%);
+        border-radius: 0;
+    }
+}
+form div.incorrect label{
+    background-color: red;
+}
+form div.incorrect label{
+    border-color: red;
+}
+#error-message{
+    color:red
+}

@@ -1,2 +1,3 @@
-/bin
-/obj
+# .gitignore
+.env
+node_modules/

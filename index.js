@@ -1,20 +1,29 @@
 import mongoose from "mongoose";
+import dotenv from "dotenv";
 import Users from "./users.js";
 
 // mongoose.connect("mongodb+srv://Jaron Hiatt:yKdEL1LxETQqGPSz@cluster0.g3l7o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
 
+dotenv.config();
+
 const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(
-            "mongodb+srv://TylerRugh:DuoQueTestPassword@cluster0.g3l7o.mongodb.net/"
-        );
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
-        return conn;
+      // Get MongoDB URI from environment variables
+      const MONGODB_URI = process.env.MONGODB_URI;
+      
+      // Check if MONGODB_URI is defined
+      if (!MONGODB_URI) {
+        throw new Error("MONGODB_URI is not defined in environment variables");
+      }
+      
+      const conn = await mongoose.connect(MONGODB_URI);
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
+      return conn;
     } catch (error) {
-        console.error(`Error: ${error.message}`);
-        process.exit(1);
+      console.error(`Error connecting to MongoDB: ${error.message}`);
+      process.exit(1);
     }
-};
+  };
 
 const addUser = async (userData) => {
     try {

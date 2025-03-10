@@ -72,7 +72,7 @@ const updateUser = async (userId, updateData) => {
     };
 
 const user = new Users({
-    "username": "hobbylover1234",
+    "username": "hobbylover123",
     "password": "$abchashedpasswordhere",
     "bio": "I hate making databases!",
     "hobbies": ["hiking", "cooking", "board games"],

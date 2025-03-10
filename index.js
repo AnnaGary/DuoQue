@@ -2,8 +2,6 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Users from "./users.js";
 
-// mongoose.connect("mongodb+srv://Jaron Hiatt:yKdEL1LxETQqGPSz@cluster0.g3l7o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
-
 dotenv.config();
 
 const connectDB = async () => {

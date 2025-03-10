@@ -2,11 +2,15 @@
  * @jest-environment jsdom
  */
 const request = require('supertest');
-require('./server.js');
+const server = require('./server.js');
 
 describe('Server Tests', () => {
   const PORT = 3000;
   const serverUrl = `http://localhost:${PORT}`;
+
+  afterAll((done) => {
+    server.close(done);
+  });
 
   test('returns index.html with status code 200', async () => {
     const res = await request(serverUrl).get('/');

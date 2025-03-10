@@ -4,24 +4,57 @@ const password_input = document.getElementById('password-input')
 const repeatpassword_input = document.getElementById('repeat-password-input')
 const error_message = document.getElementById('error-message')
 
-form.addEventListener('submit', (e) => {
-    //e.preventDefault() prevent submit
-    let errors = []
+const isSignupPage = repeatpassword_input !== null;
 
-    if(username_input){
-        // If there is a username input then we are in the signup
-        errors = getSignupFormErrors(username_input.value, password_input.value, repeatpassword_input.value)
-    }
-    else{
-        // If there isnt a repeat password input we are in the login page
-        errors = getLoginFormErrors(username_input.value, password_input.value)
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    let errors = [];
+
+    if(isSignupPage){
+        errors = getSignupFormErrors(username_input.value, password_input.value, repeatpassword_input.value);
+    } else {
+        errors = getLoginFormErrors(username_input.value, password_input.value);
     }
 
     if(errors.length > 0){
-        e.preventDefault()
-        error_message.innerText = errors.join(". ")
+        error_message.innerText = errors.join(". ");
+        return;
     }
-} )
+
+    try {
+        const userData = {
+            username: username_input.value,
+            password: password_input.value
+        };
+        
+        const endpoint = isSignupPage ? '/api/users/signup' : '/api/users/login';
+        
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            localStorage.setItem('username', userData.username);
+            
+            if (isSignupPage) {
+                window.location.href = '/profile.html';
+            } else {
+                window.location.href = '/index.html';
+            }
+        } else {
+            error_message.innerText = data.message || 'An error occurred';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        error_message.innerText = 'An error occurred. Please try again.';
+    }
+});
 
 function getSignupFormErrors(username, password, repeatpassword){
     let errors = []

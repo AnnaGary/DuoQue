@@ -1,10 +1,6 @@
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 const HTML_FOLDER = 'Pages';
 
@@ -64,14 +60,14 @@ const server = http.createServer((req, res) => {
             // If the file doesn't exist
             if (error.code === 'ENOENT') {
                 const notFoundPath = path.join(__dirname, HTML_FOLDER, '404.html');
-                fs.readFile(notFoundPath, (err, content) => {
+                fs.readFile(notFoundPath, (err, content404) => {
                     res.writeHead(404, { 'Content-Type': 'text/html' });
                     
                     // We can make a custom error 404 page later on
                     if (err) {
                         res.end('404 Not Found');
                     } else {
-                        res.end(content, 'utf-8');
+                        res.end(content404, 'utf-8');
                     }
                 });
             } else {
@@ -89,3 +85,6 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
 });
+
+// Export if tests need to require() it
+module.exports = server;

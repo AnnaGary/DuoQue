@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 
 const { Schema, model } = mongoose; 
 
@@ -7,7 +7,7 @@ const userSchema = new Schema({
     password: { type: String, required: true },  
     bio: { type: String, maxlength: 100 },        
     hobbies: { type: [String], required: true },  
-    location: {type: String},              
+    location: { type: String },             
     matches: [{ 
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
         status: { type: String, enum: ["pending", "matched", "rejected"], default: "pending" }
@@ -15,5 +15,4 @@ const userSchema = new Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-const Users = model("Users", userSchema);
-export default Users;
+module.exports = model("Users", userSchema);

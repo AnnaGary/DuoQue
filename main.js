@@ -6,7 +6,7 @@ async function main() {
     try {
         //creating a new user here
         const user = {
-        "username": "TestingTwo",
+        "username": "TesttingFinal",
         "password": "$thisismyhashedpassword",
         "bio": "I am currently making da database",
         "hobbies": ["videogames", "hiking", "board games"],

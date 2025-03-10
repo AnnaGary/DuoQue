@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "ConnectionScript.js",
   "scripts": {
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "start": "node server.js"
   },
   "type": "module",
   "keywords": [],
@@ -15,6 +17,7 @@
     "mongoose": "^8.12.1"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.1.9"
   }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hobby Selection</title>
+    <title>User Profile</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -101,11 +101,55 @@
         color: black; /* Keep text color unchanged */
     }
 
+    .bio-section {
+        margin: 30px 0;
+        max-width: 600px;
+    }
+
+    .bio-label {
+        display: block;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .bio-textarea {
+        width: 100%;
+        height: 100px;            
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+        resize: vertical;
+    }
+        
+    .submit-button {
+        margin-top: 30px;
+        padding: 12px 24px;
+        font-size: 18px;
+        background-color: green;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .submit-button:hover {
+        background-color: darkgreen;
+    }
+
     </style>
 </head>
 <body>
 
-    <h1>Hobby Selection</h1>
+    <h1>User Profile</h1>
+
+    <div class="bio-section">
+        <span class="bio-label">About Me:</span>
+        <textarea id="bio-input" class="bio-textarea" placeholder="Tell us about yourself..."></textarea>
+    </div>
+
     <h3>Please select at least one hobby</h3>
 
     <ul>
@@ -156,6 +200,8 @@
         </ul>
     </ul>
 
+    <button id="submit-button" class="submit-button">Save Profile</button>
+
     <script>
         function toggleSelection(selectedItem, subcategoryId = null) {
             // Toggle selection state
@@ -172,6 +218,9 @@
             }
         }
     </script>
+
+<script src="validation.js"></script>
+<script src="hobby-handler.js"></script>
 
 </body>
 </html>

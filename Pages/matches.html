@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Matches</title>
+  <style>
+    body { font-family: Arial; display: flex; flex-direction: column; align-items: center; }
+    .card {
+      border: 1px solid #ccc;
+      padding: 20px;
+      width: 300px;
+      margin-top: 50px;
+      border-radius: 10px;
+      box-shadow: 2px 2px 8px #aaa;
+      text-align: center;
+    }
+    button { margin: 10px; padding: 10px 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h1>Matches</h1>
+  <div class="card" id="profileCard">Loading...</div>
+  <div>
+    <button onclick="prevProfile()">⬅️ Swipe Left</button>
+    <button onclick="nextProfile()">➡️ Swipe Right</button>
+  </div>
+
+  <script src="swiper.js"></script> <!-- Load the JS file here -->
+
+</body>
+</html>

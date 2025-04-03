@@ -109,3 +109,5 @@ allInputs.forEach(input => {
         }
     })
 })
+
+export { getSignupFormErrors, getLoginFormErrors };

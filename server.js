@@ -3,12 +3,16 @@ import fs from 'fs';
 import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser } from './index.js';
+import bcrypt from 'bcrypt';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const HTML_FOLDER = 'Pages';
 const PORT = 3000;
+
+const saltRounds = 10;
+const hashedPassword = await bcrypt.hash(password, saltRounds);
 
 //connecting to the database
 connectDB().catch(err => {
@@ -67,7 +71,7 @@ const server = http.createServer(async (req, res) => {
 
         const newUser = await addUser({
             username,
-            password,
+            password: hashedPassword,
             bio: '',
             hobbies: [],
             matches: [],
@@ -97,6 +101,14 @@ if (url === '/api/users/login' && method === 'POST') {
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'Invalid username or password' }));
             return;
+        }
+
+const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordCorrect) {
+         res.writeHead(401, { 'Content-Type': 'application/json' });
+         res.end(JSON.stringify({ message: 'Invalid username or password' }));
+        return;
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });

@@ -1,19 +1,19 @@
 let profiles = [];
 let currentIndex = 0;
 
-// Replace with your actual logged-in user ID
-const fromUserId = "660d0a1e1234567890abcdef"; // Example
+const fromUserId = "660d0a1e1234567890abcdef";
 
-// Fetch profiles from backend
+const BACKEND_URL = "http://localhost:3000";
+
 async function fetchProfiles() {
   try {
-    const res = await fetch('http://localhost:3000/api/profiles'); // Adjust port if needed
-    profiles = await res.json();
-    console.log("Profiles fetched:", profiles);
+    console.log("Fetching profiles from:", `${BACKEND_URL}/api/profiles`);
+    const res = await fetch(`${BACKEND_URL}/api/profiles`);
 
-    // Optionally filter out current user
-    const filtered = profiles.filter(p => p._id !== fromUserId);
-    profiles = filtered;
+    if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
+
+    profiles = await res.json();
+    console.log("Fetched profiles:", profiles);
 
     if (!profiles.length) {
       document.getElementById('profileCard').innerText = "No profiles available.";
@@ -27,7 +27,6 @@ async function fetchProfiles() {
   }
 }
 
-// Show current profile in card
 function showProfile() {
   if (!profiles.length) {
     document.getElementById('profileCard').innerText = "No profiles available.";
@@ -35,6 +34,7 @@ function showProfile() {
   }
 
   const p = profiles[currentIndex];
+  console.log("Showing profile:", p);
 
   document.getElementById('profileCard').innerHTML = `
     <h2>@${p.username}</h2>
@@ -45,24 +45,20 @@ function showProfile() {
   `;
 }
 
-// Navigate right
 function nextProfile() {
   currentIndex = (currentIndex + 1) % profiles.length;
   showProfile();
 }
 
-// Navigate left
 function prevProfile() {
   currentIndex = (currentIndex - 1 + profiles.length) % profiles.length;
   showProfile();
 }
 
-// Like profile and POST to backend
 async function likeProfile() {
   const toUserId = profiles[currentIndex]._id;
-
   try {
-    const res = await fetch('http://localhost:3000/api/matches/like', {
+    const res = await fetch(`${BACKEND_URL}/api/matches/like`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fromUserId, toUserId })

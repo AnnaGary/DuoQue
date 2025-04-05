@@ -152,73 +152,57 @@ if (url === '/api/users/update-bio' && method === 'POST') {
 
 if (url.startsWith('/api/users/profile') && method === 'GET') {
     try {
-        // Extract username from query string
-        const urlObj = new URL(req.url, `http://${req.headers.host}`);
-        const username = urlObj.searchParams.get('username');
-
-        if (!username) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Username is required' }));
-            return;
-        }
-
-        const user = await findUserByUsername(username);
-        if (!user) {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'User not found' }));
-            return;
-        }
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            username: user.username,
-            bio: user.bio,
-            hobbies: user.hobbies,
-            createdAt: user.createdAt
-        }));
-    } catch (error) {
-        console.error(`Error getting user profile: ${error.message}`);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Server error' }));
+      const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
+      const username = searchParams.get('username');
+      if (!username) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Username is required' }));
+        return;
+      }
+      const user = await findUserByUsername(username);
+      if (!user) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'User not found' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        username: user.username,
+        bio: user.bio,
+        hobbies: user.hobbies,
+        createdAt: user.createdAt
+      }));
+    } catch (err) {
+      console.error('Get profile error:', err.message);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: 'Server error' }));
     }
     return;
-}
+  }
 
-if (url === '/api/users/update-hobbies' && method === 'POST') {
+  if (url === '/api/profiles' && method === 'GET') {
     try {
-        const data = await getRequestBody(req);
-        const { username, hobbies } = data;
-
-        if(!username || !hobbies || !Array.isArray(hobbies) || hobbies.length === 0) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Invalid request data' }));
-            return;
-        }
-
-        const user = await findUserByUsername(username);
-        if (!user) {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'User not found' }));
-            return;
-        }
-
-        const updatedUser = await updateUser(user._id, { hobbies });
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            message: 'Hobbies updated successfully',
-            hobbies: updatedUser.hobbies
-        }));
-    } catch (error) {
-        console.error(`Error updating user: ${error.message}`);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Server error' }));
+      const users = await getAllUsers();
+      const safeUsers = users.map(({ _id, username, bio, hobbies, createdAt }) => ({
+        _id,
+        username,
+        bio,
+        hobbies,
+        createdAt
+      }));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(safeUsers));
+    } catch (err) {
+      console.error('Get profiles error:', err.message);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: 'Server error while fetching profiles' }));
     }
     return;
-}
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ message: 'API endpoint not found' }));
-    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ message: 'API endpoint not found' }));
+  return;
 }
 
 if (url === '/' || url === '') {

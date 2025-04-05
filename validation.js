@@ -9,6 +9,7 @@ const error_message = document.getElementById('error-message')
 const isSignupPage = repeatpassword_input !== null;
 
 form.addEventListener('submit', async (e) => {
+
     e.preventDefault();
     let errors = [];
 
@@ -113,8 +114,3 @@ allInputs.forEach(input => {
 });
 
 });
-
-
-
-export { getSignupFormErrors, getLoginFormErrors };
-

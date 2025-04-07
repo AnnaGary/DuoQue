@@ -31,6 +31,7 @@ Known Limitations?
 	No tests yet for role based access
  
 (How to run)
+
 	In order to have all prerequisites, run npm install supertest, and npm install bcrypt.
 	In order to start the server, run "npm start"
 	In order to launch the testing suite, (server must be running) run "npm test"

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser } from './index.js';
+import bcrypt from 'bcrypt';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,10 +76,10 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify({ message: 'Username already exists' }));
             return;
         }
-
+        const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await addUser({
             username,
-            password,
+            password: hashedPassword,
             bio: '',
             hobbies: [],
             matches: [],
@@ -190,6 +191,13 @@ if (url === '/api/users/login' && method === 'POST') {
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'Invalid username or password' }));
             return;
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Invalid username or password' }));
+             return;
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });

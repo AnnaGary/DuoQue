@@ -40,6 +40,11 @@ form.addEventListener('submit', async (e) => {
         const data = await response.json();
         
         if (response.ok) {
+            if (data.user && data.user.role) {
+                localStorage.setItem('role', data.user.role);
+              } else {
+                localStorage.setItem('role', 'user');
+              }
             localStorage.setItem('username', userData.username);
             
             if (isSignupPage) {

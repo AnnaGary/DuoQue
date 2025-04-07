@@ -12,7 +12,8 @@ const userSchema = new Schema({
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
         status: { type: String, enum: ["pending", "matched", "rejected"], default: "pending" }
     }],
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    role: { type: String, enum: ["user", "admin"], default: "user" },
 });
 
 const Users = model("Users", userSchema);

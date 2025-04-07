@@ -4,7 +4,7 @@
   "main": "ConnectionScript.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "start": "node server.js"
   },
   "type": "module",

@@ -1,3 +1,5 @@
+document.addEventListener('DOMContentLoaded', () => {
+
 const form = document.getElementById('form')
 const username_input = document.getElementById('username-input')
 const password_input = document.getElementById('password-input')
@@ -7,6 +9,7 @@ const error_message = document.getElementById('error-message')
 const isSignupPage = repeatpassword_input !== null;
 
 form.addEventListener('submit', async (e) => {
+
     e.preventDefault();
     let errors = [];
 
@@ -40,6 +43,11 @@ form.addEventListener('submit', async (e) => {
         const data = await response.json();
         
         if (response.ok) {
+            if (data.user && data.user.role) {
+                localStorage.setItem('role', data.user.role);
+              } else {
+                localStorage.setItem('role', 'user');
+              }
             localStorage.setItem('username', userData.username);
             
             if (isSignupPage) {
@@ -107,5 +115,7 @@ allInputs.forEach(input => {
             input.parentElement.classList.remove('incorrect')
             error_message.innerText = ''
         }
-    })
-})
+    });
+});
+
+});

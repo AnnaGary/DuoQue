@@ -16,6 +16,17 @@ connectDB().catch(err => {
     process.exit(1);
 })
 
+// Function to check if a user is an admin
+async function isUserAdmin(username) {
+    try {
+      const user = await findUserByUsername(username);
+      return user && user.role === 'admin';
+    } catch (error) {
+      console.error(`Error checking admin status: ${error.message}`);
+      return false;
+    }
+  }
+
 //function to read request body
 const getRequestBody = (req) => {
     return new Promise((resolve, reject) => {
@@ -85,7 +96,89 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ message: 'Server error' }));
     }
     return;
+
 }
+
+if (req.url.startsWith('/api/users/all') && method === 'GET') {
+    const urlObj = new URL(req.url, `http://${req.headers.host}`);
+    const username = urlObj.searchParams.get('username');
+    
+    const isAdmin = await isUserAdmin(username);
+    if (!isAdmin) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Not authorized' }));
+        return;
+    }
+    
+    try {
+      const users = await getAllUsers();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(users));
+    } catch (error) {
+      console.error(`Error getting all users: ${error.message}`);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: 'Server error' }));
+    }
+    return;
+  }
+
+if (url.startsWith('/api/users/check-admin') && method === 'GET') {
+    try {
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const username = urlObj.searchParams.get('username');
+        
+        if (!username) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Username is required' }));
+            return;
+        }
+        
+        const isAdmin = await isUserAdmin(username);
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ isAdmin }));
+    } catch (error) {
+        console.error(`Error checking admin status: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Server error' }));
+    }
+    return;
+}
+
+if (url === '/api/users/delete' && method === 'DELETE') {
+    const isAdmin = await checkAdminAuth(req, res);
+    if (!isAdmin) {
+      // Already sent appropriate response in checkAdminAuth
+      return;
+    }
+    
+    try {
+      const urlObj = new URL(req.url, `http://${req.headers.host}`);
+      const userId = urlObj.searchParams.get('userId');
+      
+      if (!userId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'User ID is required' }));
+        return;
+      }
+      
+      //add delete user functionality here later
+      
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        success: true,
+        message: 'User deleted successfully' 
+      }));
+    } catch (error) {
+      console.error(`Error deleting user: ${error.message}`);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        success: false,
+        message: 'Server error' 
+      }));
+    }
+    return;
+  }
 
 if (url === '/api/users/login' && method === 'POST') {
     try {
@@ -105,7 +198,8 @@ if (url === '/api/users/login' && method === 'POST') {
             user: {
                 id: user._id,
                 username: user.username,
-                hobbies: user.hobbies
+                hobbies: user.hobbies,
+                role: user.role
             }
         }));
     } catch (error) {

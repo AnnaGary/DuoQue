@@ -37,4 +37,6 @@ Known Limitations?
 	In order to start the server, run "npm start"
 	In order to launch the testing suite, (server must be running) run "npm test"
 
+Video Demonstration:
+https://www.youtube.com/watch?v=Rorpycgea2s&ab_channel=PSPten
  

@@ -83,7 +83,8 @@ const server = http.createServer(async (req, res) => {
             bio: '',
             hobbies: [],
             matches: [],
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            role: 'user' // Default role
         });
 
         res.writeHead(201, { 'Content-Type': 'application/json' });
@@ -290,7 +291,7 @@ if (url.startsWith('/api/users/profile') && method === 'GET') {
         username,
         bio,
         hobbies,
-        createdAt
+        createdAt,
       }));
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(safeUsers));

@@ -283,6 +283,39 @@ if (url.startsWith('/api/users/profile') && method === 'GET') {
     return;
   }
 
+  if (url === '/api/users/update-hobbies' && method === 'POST') {
+    try {
+        const data = await getRequestBody(req);
+        const { username, hobbies } = data;
+
+        if(!username || !hobbies || !Array.isArray(hobbies) || hobbies.length === 0) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Invalid request data' }));
+            return;
+        }
+
+        const user = await findUserByUsername(username);
+        if (!user) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'User not found' }));
+            return;
+        }
+
+        const updatedUser = await updateUser(user._id, { hobbies });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            message: 'Hobbies updated successfully',
+            hobbies: updatedUser.hobbies
+        }));
+    } catch (error) {
+        console.error(`Error updating user: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Server error' }));
+    }
+    return;
+}
+
   if (url === '/api/profiles' && method === 'GET') {
     try {
       const users = await getAllUsers();

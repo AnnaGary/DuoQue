@@ -49,7 +49,7 @@ const getAllUsers = async () => {
 
 const findUserByUsername = async (username) => {
     try {
-        const user = await Users.findOne({ username }, '-password');
+        const user = await Users.findOne({ username }); // ← Removed '-password'
         return user;
     } catch (error) {
         console.error(`Error finding user: ${error.message}`);

@@ -49,32 +49,13 @@ const getAllUsers = async () => {
 
 const findUserByUsername = async (username) => {
     try {
-        const user = await Users.findOne({ username }, '-password');
+        const user = await Users.findOne({ username }); // ← Removed '-password'
         return user;
     } catch (error) {
         console.error(`Error finding user: ${error.message}`);
         throw error;
     }
 };
-
-const findUserById = async (userId) => {
-    try {
-      return await User.findById(userId);
-    } catch (error) {
-      console.error(`Error finding user by ID: ${error.message}`);
-      throw error;
-    }
-  };
-
-const isUserAdmin = async (username) => {
-    try {
-      const user = await findUserByUsername(username);
-      return user && user.role === 'admin';
-    } catch (error) {
-      console.error(`Error checking admin status: ${error.message}`);
-      return false;
-    }
-  };
 
 const updateUser = async (userId, updateData) => {
     try {
@@ -104,4 +85,4 @@ const user = new Users({
     "createdAt": "2025-02-27T15:30:00Z" 
 })
 
-export { connectDB, addUser, getAllUsers, findUserByUsername, updateUser, isUserAdmin, findUserById };
+export { connectDB, addUser, getAllUsers, findUserByUsername, updateUser };

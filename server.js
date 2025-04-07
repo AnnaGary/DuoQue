@@ -3,6 +3,7 @@ import fs from 'fs';
 import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser } from './index.js';
+import bcrypt from 'bcrypt';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,17 +16,6 @@ connectDB().catch(err => {
     console.error(`Error connecting to MongoDB: ${err.message}`);
     process.exit(1);
 })
-
-// Function to check if a user is an admin
-async function isUserAdmin(username) {
-    try {
-      const user = await findUserByUsername(username);
-      return user && user.role === 'admin';
-    } catch (error) {
-      console.error(`Error checking admin status: ${error.message}`);
-      return false;
-    }
-  }
 
 //function to read request body
 const getRequestBody = (req) => {
@@ -75,10 +65,10 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify({ message: 'Username already exists' }));
             return;
         }
-
+        const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await addUser({
             username,
-            password,
+            password: hashedPassword,
             bio: '',
             hobbies: [],
             matches: [],
@@ -96,89 +86,7 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ message: 'Server error' }));
     }
     return;
-
 }
-
-if (req.url.startsWith('/api/users/all') && method === 'GET') {
-    const urlObj = new URL(req.url, `http://${req.headers.host}`);
-    const username = urlObj.searchParams.get('username');
-    
-    const isAdmin = await isUserAdmin(username);
-    if (!isAdmin) {
-        res.writeHead(403, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Not authorized' }));
-        return;
-    }
-    
-    try {
-      const users = await getAllUsers();
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(users));
-    } catch (error) {
-      console.error(`Error getting all users: ${error.message}`);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: 'Server error' }));
-    }
-    return;
-  }
-
-if (url.startsWith('/api/users/check-admin') && method === 'GET') {
-    try {
-        const urlObj = new URL(req.url, `http://${req.headers.host}`);
-        const username = urlObj.searchParams.get('username');
-        
-        if (!username) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Username is required' }));
-            return;
-        }
-        
-        const isAdmin = await isUserAdmin(username);
-        
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ isAdmin }));
-    } catch (error) {
-        console.error(`Error checking admin status: ${error.message}`);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Server error' }));
-    }
-    return;
-}
-
-if (url === '/api/users/delete' && method === 'DELETE') {
-    const isAdmin = await checkAdminAuth(req, res);
-    if (!isAdmin) {
-      // Already sent appropriate response in checkAdminAuth
-      return;
-    }
-    
-    try {
-      const urlObj = new URL(req.url, `http://${req.headers.host}`);
-      const userId = urlObj.searchParams.get('userId');
-      
-      if (!userId) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'User ID is required' }));
-        return;
-      }
-      
-      //add delete user functionality here later
-      
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true,
-        message: 'User deleted successfully' 
-      }));
-    } catch (error) {
-      console.error(`Error deleting user: ${error.message}`);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: false,
-        message: 'Server error' 
-      }));
-    }
-    return;
-  }
 
 if (url === '/api/users/login' && method === 'POST') {
     try {
@@ -192,14 +100,20 @@ if (url === '/api/users/login' && method === 'POST') {
             return;
         }
 
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Invalid username or password' }));
+             return;
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             message: 'Login successful',
             user: {
                 id: user._id,
                 username: user.username,
-                hobbies: user.hobbies,
-                role: user.role
+                hobbies: user.hobbies
             }
         }));
     } catch (error) {
@@ -246,57 +160,73 @@ if (url === '/api/users/update-bio' && method === 'POST') {
 
 if (url.startsWith('/api/users/profile') && method === 'GET') {
     try {
-      const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
-      const username = searchParams.get('username');
-      if (!username) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Username is required' }));
-        return;
-      }
-      const user = await findUserByUsername(username);
-      if (!user) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'User not found' }));
-        return;
-      }
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        username: user.username,
-        bio: user.bio,
-        hobbies: user.hobbies,
-        createdAt: user.createdAt
-      }));
-    } catch (err) {
-      console.error('Get profile error:', err.message);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: 'Server error' }));
+        // Extract username from query string
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const username = urlObj.searchParams.get('username');
+
+        if (!username) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Username is required' }));
+            return;
+        }
+
+        const user = await findUserByUsername(username);
+        if (!user) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'User not found' }));
+            return;
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            username: user.username,
+            bio: user.bio,
+            hobbies: user.hobbies,
+            createdAt: user.createdAt
+        }));
+    } catch (error) {
+        console.error(`Error getting user profile: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Server error' }));
     }
     return;
-  }
+}
 
-  if (url === '/api/profiles' && method === 'GET') {
+if (url === '/api/users/update-hobbies' && method === 'POST') {
     try {
-      const users = await getAllUsers();
-      const safeUsers = users.map(({ _id, username, bio, hobbies, createdAt }) => ({
-        _id,
-        username,
-        bio,
-        hobbies,
-        createdAt
-      }));
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(safeUsers));
-    } catch (err) {
-      console.error('Get profiles error:', err.message);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: 'Server error while fetching profiles' }));
+        const data = await getRequestBody(req);
+        const { username, hobbies } = data;
+
+        if(!username || !hobbies || !Array.isArray(hobbies) || hobbies.length === 0) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Invalid request data' }));
+            return;
+        }
+
+        const user = await findUserByUsername(username);
+        if (!user) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'User not found' }));
+            return;
+        }
+
+        const updatedUser = await updateUser(user._id, { hobbies });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            message: 'Hobbies updated successfully',
+            hobbies: updatedUser.hobbies
+        }));
+    } catch (error) {
+        console.error(`Error updating user: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Server error' }));
     }
     return;
-  }
-
-  res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ message: 'API endpoint not found' }));
-  return;
+}
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: 'API endpoint not found' }));
+    return;
 }
 
 if (url === '/' || url === '') {
@@ -417,4 +347,3 @@ if (url === '/' || url === '') {
 // Start the server
 server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
-});

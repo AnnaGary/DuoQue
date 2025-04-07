@@ -7,8 +7,6 @@ Unlike many existing applications that focus on social networking, DuoQue priori
 
 The app uses bcrypt to securely hash passwords before storing them in MongoDB, ensuring passwords are never saved in plain text. During login, bcrypt.compare() verifies the entered password against the stored hash. After successful login, the username is saved in localStorage to simulate session management, and access to pages like profile.html is restricted if no user is logged in. Input validation is handled client-side in validation.js, ensuring required fields are filled and passwords meet minimum criteria before form submission. All authentication routes are wrapped in try/catch blocks with meaningful error handling. While there are no user roles or advanced permissions at this stage, the current setup provides a basic, secure login system suitable for further development.
 
-For bcrypt to work, you must install it. "npm install bcrypt" is the needed command to install it.
-
 (Test Coverage)
 
 Tools/Setup?
@@ -34,6 +32,7 @@ Known Limitations?
  
 (How to run)
 
+	In order to have all prerequisites, run npm install supertest, and npm install bcrypt.
 	In order to start the server, run "npm start"
 	In order to launch the testing suite, (server must be running) run "npm test"
 

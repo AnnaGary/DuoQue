@@ -101,6 +101,7 @@ const user = new Users({
             "status": "matched"
         }
     ],
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     "createdAt": "2025-02-27T15:30:00Z" 
 })
 

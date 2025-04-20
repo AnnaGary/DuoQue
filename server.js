@@ -4,6 +4,7 @@ import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser } from './index.js';
 import bcrypt from 'bcrypt';
+import { handleLikeRequest } from './liking.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,6 +64,10 @@ const server = http.createServer(async (req, res) => {
             res.writeHead(204);
             res.end();
             return;
+        }
+
+        if (req.method === 'POST' && req.url === '/api/matches/like') {
+            return handleLikeRequest(req, res);
         }
 
     if (url === '/api/users/signup' && method === 'POST') {

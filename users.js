@@ -8,10 +8,10 @@ const userSchema = new Schema({
     bio: { type: String, maxlength: 100 },        
     hobbies: { type: [String], required: true },  
     location: {type: String},              
-    matches: [{ 
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
-        status: { type: String, enum: ["pending", "matched", "rejected"], default: "pending" }
-    }],
+    matches: [{
+            userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            status: String
+          }],
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }],
     createdAt: { type: Date, default: Date.now },
     role: { type: String, enum: ["user", "admin"], default: "user" },

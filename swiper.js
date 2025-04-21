@@ -50,16 +50,12 @@ async function updateLikeButton(toUserId) {
     const user = await res.json();
 
     const liked = user.matches.some(match => {
-      // Handle if match.userId is a string or an object
-      return (
-        match.userId === toUserId ||
-        (typeof match.userId === 'object' && match.userId._id === toUserId)
-      );
+      const matchId = typeof match.userId === 'object' ? match.userId._id : match.userId;
+      return matchId === toUserId;
     });
 
-    likeBtn.classList.remove('like', 'liked');
-    likeBtn.textContent = liked ? '❤️' : 'Like';
-    likeBtn.classList.add(liked ? 'liked' : 'like');
+    likeBtn.textContent = liked ? '❤️ Unlike' : 'Like';
+    likeBtn.className = liked ? 'liked' : 'like';
 
   } catch (err) {
     console.error("Error checking like status:", err);
@@ -85,9 +81,8 @@ async function likeProfile() {
 
     const data = await res.json();
 
-    likeBtn.classList.remove('like', 'liked');
-    likeBtn.textContent = data.liked ? '❤️' : 'Unlike';
-    likeBtn.classList.add(data.liked ? 'liked' : 'like');
+    likeBtn.textContent = data.liked ? '❤️ Unlike' : 'Like';
+    likeBtn.className = data.liked ? 'liked' : 'like';
 
   } catch (err) {
     console.error("Error liking profile:", err);

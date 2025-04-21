@@ -22,7 +22,7 @@ function showProfile() {
     <p><small>Joined: ${new Date(p.createdAt).toLocaleDateString()}</small></p>
   `;
 
-  updateLikeButton(p._id); // Refresh button state
+  updateLikeButton(p._id);
 }
 
 function nextProfile() {
@@ -56,7 +56,6 @@ async function updateLikeButton(toUserId) {
 
     likeBtn.textContent = liked ? '❤️ Unlike' : 'Like';
     likeBtn.className = liked ? 'liked' : 'like';
-
   } catch (err) {
     console.error("Error checking like status:", err);
   }

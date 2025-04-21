@@ -11,19 +11,28 @@ export async function handleLikeRequest(req, res) {
       }
 
       const fromUser = await findUserById(fromUserId);
+
       const alreadyLiked = fromUser.matches.some(m => m.userId.toString() === toUserId);
+
       console.log(`User ${fromUserId} → ${alreadyLiked ? 'UNLIKE' : 'LIKE'} → ${toUserId}`);
 
       let updatedMatches;
+      let updatedLikes;
+
       if (alreadyLiked) {
         // Unlike
         updatedMatches = fromUser.matches.filter(m => m.userId.toString() !== toUserId);
+        updatedLikes = fromUser.likes.filter(id => id.toString() !== toUserId);
       } else {
         // Like
         updatedMatches = [...fromUser.matches, { userId: toUserId, status: 'pending' }];
+        updatedLikes = [...fromUser.likes, toUserId];
       }
 
-      await updateUser(fromUserId, { matches: updatedMatches });
+      await updateUser(fromUserId, {
+        matches: updatedMatches,
+        likes: updatedLikes,
+      });
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({

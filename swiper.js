@@ -1,19 +1,17 @@
 let profiles = [];
 let currentIndex = 0;
 
+const BACKEND_URL = "http://localhost:3000";
 const fromUserId = localStorage.getItem('userId');
 
-const BACKEND_URL = "http://localhost:3000";
+// Track liked user IDs in memory (optionally persist in localStorage)
+let likedUserIds = new Set(JSON.parse(localStorage.getItem('likedUserIds') || '[]'));
 
 async function fetchProfiles() {
   try {
-    console.log("Fetching profiles from:", `${BACKEND_URL}/api/profiles`);
     const res = await fetch(`${BACKEND_URL}/api/profiles`);
-
     if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
-
     profiles = await res.json();
-    console.log("Fetched profiles:", profiles);
 
     if (!profiles.length) {
       document.getElementById('profileCard').innerText = "No profiles available.";
@@ -34,8 +32,6 @@ function showProfile() {
   }
 
   const p = profiles[currentIndex];
-  console.log("Showing profile:", p);
-
   document.getElementById('profileCard').innerHTML = `
     <h2>@${p.username}</h2>
     <p><strong>Bio:</strong> ${p.bio || 'No bio provided'}</p>
@@ -45,12 +41,14 @@ function showProfile() {
   `;
 
   const likeBtn = document.getElementById('likeBtn');
-  if (likeBtn) {
+  if (likedUserIds.has(p._id)) {
+    likeBtn.textContent = "💔 Unlike";
+    likeBtn.classList.add("liked");
+  } else {
     likeBtn.textContent = "❤️ Like";
     likeBtn.classList.remove("liked");
-    likeBtn.disabled = false;
   }
-
+  likeBtn.disabled = false;
 }
 
 function nextProfile() {
@@ -65,32 +63,41 @@ function prevProfile() {
 
 async function likeProfile() {
   const toUserId = profiles[currentIndex]._id;
-  const fromUserId = localStorage.getItem('userId');
+  const likeBtn = document.getElementById('likeBtn');
 
   if (!fromUserId) {
-     alert('Please log in to like profiles.');
+    alert('Please log in to like profiles.');
     return;
   }
+
+  const isLiked = likedUserIds.has(toUserId);
 
   try {
     const res = await fetch(`${BACKEND_URL}/api/matches/like`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fromUserId, toUserId })
+      body: JSON.stringify({ fromUserId, toUserId, unlike: isLiked })
     });
 
     const data = await res.json();
-    alert(data.message);
+    console.log(data.message);
 
-    const likeBtn = document.getElementById('likeBtn');
-    likeBtn.textContent = "❤️ Liked";
-    likeBtn.classList.add("liked");
-    likeBtn.disabled = true;
+    // Update liked state
+    if (isLiked) {
+      likedUserIds.delete(toUserId);
+      likeBtn.textContent = "❤️ Like";
+      likeBtn.classList.remove("liked");
+    } else {
+      likedUserIds.add(toUserId);
+      likeBtn.textContent = "💔 Unlike";
+      likeBtn.classList.add("liked");
+    }
 
-    nextProfile();
+    // Save to localStorage
+    localStorage.setItem('likedUserIds', JSON.stringify([...likedUserIds]));
   } catch (err) {
-    console.error("Error liking profile:", err);
-    alert("Something went wrong while liking this profile.");
+    console.error("Error toggling like:", err);
+    alert("Something went wrong.");
   }
 }
 

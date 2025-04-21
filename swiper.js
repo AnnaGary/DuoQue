@@ -47,15 +47,21 @@ async function updateLikeButton(toUserId) {
 
   try {
     const res = await fetch(`${BACKEND_URL}/api/users/profile?username=${localStorage.getItem('username')}`);
-    const data = await res.json();
-    const isLiked = data.matches?.some(m => m.userId === toUserId || m.userId?._id === toUserId);
+    const user = await res.json();
 
-    if (isLiked) {
-      likeBtn.textContent = "❤️ Unlike";
-      likeBtn.className = "liked";
+    const alreadyLiked = user.matches.some(m =>
+      (typeof m.userId === 'string' && m.userId === toUserId) ||
+      (typeof m.userId === 'object' && m.userId._id === toUserId)
+    );
+
+    likeBtn.classList.remove('like', 'liked');
+
+    if (alreadyLiked) {
+      likeBtn.textContent = '❤️';
+      likeBtn.classList.add('liked');
     } else {
-      likeBtn.textContent = "Like";
-      likeBtn.className = "like";
+      likeBtn.textContent = 'Like';
+      likeBtn.classList.add('like');
     }
   } catch (err) {
     console.error("Error checking like status:", err);
@@ -80,14 +86,17 @@ async function likeProfile() {
     });
 
     const data = await res.json();
-    console.log(data.message);
+
+    likeBtn.classList.remove('like', 'liked');
 
     if (data.liked) {
-      likeBtn.textContent = "❤️ Unlike";
-      likeBtn.className = "liked";
+      // Now liked → show heart
+      likeBtn.textContent = '❤️';
+      likeBtn.classList.add('liked');
     } else {
-      likeBtn.textContent = "Like";
-      likeBtn.className = "like";
+      // Just unliked → show "Unlike"
+      likeBtn.textContent = 'Unlike';
+      likeBtn.classList.add('like');
     }
   } catch (err) {
     console.error("Error liking profile:", err);

@@ -1,4 +1,4 @@
-import { User } from './models/User.js'; // Adjust the path if needed
+import Users from './users.js'; // Adjust the path if needed
 
 export async function handleLikeRequest(req, res) {
   try {
@@ -15,7 +15,7 @@ export async function handleLikeRequest(req, res) {
       }
 
       // Fetch the "liker"
-      const fromUser = await User.findById(fromUserId);
+      const fromUser = await Users.findById(fromUserId);
       if (!fromUser) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ message: 'User not found.' }));
@@ -28,7 +28,7 @@ export async function handleLikeRequest(req, res) {
       }
 
       // Optional: check for a match
-      const toUser = await User.findById(toUserId);
+      const toUser = await Users.findById(toUserId);
       const isMutual = toUser?.likes.includes(fromUserId);
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -38,8 +38,8 @@ export async function handleLikeRequest(req, res) {
       }));
     });
   } catch (err) {
-    console.error('Error processing like:', err);
+    console.error('❌ Like error:', err); 
     res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ message: 'Server error while processing like.' }));
+    res.end(JSON.stringify({ message: 'Server error' }));
   }
 }

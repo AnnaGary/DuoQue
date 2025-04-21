@@ -1,7 +1,7 @@
 let profiles = [];
 let currentIndex = 0;
 
-const fromUserId = "660d0a1e1234567890abcdef";
+const fromUserId = localStorage.getItem('userId');
 
 const BACKEND_URL = "http://localhost:3000";
 
@@ -43,6 +43,14 @@ function showProfile() {
     <p><strong>Location:</strong> ${p.location || 'Unknown'}</p>
     <p><small>Joined: ${new Date(p.createdAt).toLocaleDateString()}</small></p>
   `;
+
+  const likeBtn = document.getElementById('likeBtn');
+  if (likeBtn) {
+    likeBtn.textContent = "❤️ Like";
+    likeBtn.classList.remove("liked");
+    likeBtn.disabled = false;
+  }
+
 }
 
 function nextProfile() {
@@ -57,6 +65,13 @@ function prevProfile() {
 
 async function likeProfile() {
   const toUserId = profiles[currentIndex]._id;
+  const fromUserId = localStorage.getItem('userId');
+
+  if (!fromUserId) {
+     alert('Please log in to like profiles.');
+    return;
+  }
+
   try {
     const res = await fetch(`${BACKEND_URL}/api/matches/like`, {
       method: "POST",
@@ -66,6 +81,12 @@ async function likeProfile() {
 
     const data = await res.json();
     alert(data.message);
+
+    const likeBtn = document.getElementById('likeBtn');
+    likeBtn.textContent = "❤️ Liked";
+    likeBtn.classList.add("liked");
+    likeBtn.disabled = true;
+
     nextProfile();
   } catch (err) {
     console.error("Error liking profile:", err);

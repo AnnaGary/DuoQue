@@ -46,7 +46,8 @@
     }
     .swipe-left { background-color: #4CAF50; color: white; }
     .swipe-right { background-color: #4CAF50; color: white; }
-    .like { background-color: #ff4081; color: white; }
+    .like {background-color: #8B0000; /* Red */ color: white; }
+    .liked {background-color: #4B0000; /* Dark Red */ color: white; }
   </style>
 </head>
 <body>
@@ -57,7 +58,7 @@
 
   <div class="btns">
     <button class="swipe-left" onclick="prevProfile()">⬅️ Swipe Left</button>
-    <button class="like" onclick="likeProfile()">❤️ Like</button>
+    <button id="likeBtn" class="like" onclick="likeProfile()">❤️ Like</button>
     <button class="swipe-right" onclick="nextProfile()">➡️ Swipe Right</button>
   </div>
 

@@ -258,6 +258,10 @@ if (url === '/api/users/update-bio' && method === 'POST') {
     return;
 }
 
+if (req.method === 'POST' && req.url === '/api/matches/like') {
+    return handleLikeRequest(req, res);
+  }
+  
 if (url.startsWith('/api/users/profile') && method === 'GET') {
     try {
       const { searchParams } = new URL(req.url, `http://${req.headers.host}`);

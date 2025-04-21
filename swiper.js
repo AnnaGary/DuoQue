@@ -26,8 +26,15 @@ function showProfile() {
 }
 
 function nextProfile() {
+  resetLikeButton();
   currentIndex = (currentIndex + 1) % profiles.length;
   showProfile();
+}
+
+function resetLikeButton() {
+  const likeBtn = document.getElementById('likeBtn');
+  likeBtn.textContent = "Like";
+  likeBtn.className = "like";
 }
 
 function prevProfile() {

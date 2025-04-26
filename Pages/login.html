@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const data = await res.json();
 
       if (res.ok) {
+        localStorage.clear();
         localStorage.setItem('userId', data.user.id);
         localStorage.setItem('username', data.user.username);
         alert('Login successful!');

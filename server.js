@@ -88,6 +88,7 @@ const server = http.createServer(async (req, res) => {
             bio: '',
             hobbies: [],
             matches: [],
+            likes: [], 
             createdAt: new Date().toISOString(),
             role: 'user' // Default role
         });
@@ -327,32 +328,40 @@ if (url.startsWith('/api/users/profile') && method === 'GET') {
 
 if (url.startsWith('/api/profiles') && method === 'GET') {
     try {
-      const urlObj = new URL(req.url, `http://${req.headers.host}`);
-      const userId = urlObj.searchParams.get('userId');
-  
-      const allUsers = await getAllUsers();
-      let likedIds = [];
-  
-      if (userId) {
-        const currentUser = await findUserById(userId);
-        if (currentUser) {
-          likedIds = currentUser.likes.map(id => id.toString());
-        }
-      }
-  
-      const safeUsers = allUsers
-        .filter(u => u._id.toString() !== userId)
-        .map(({ _id, username, bio, hobbies, createdAt }) => ({
-          _id,
-          username,
-          bio,
-          hobbies,
-          createdAt,
-          liked: likedIds.includes(_id.toString())
-        }));
-  
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(safeUsers));
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const userId = urlObj.searchParams.get('userId');
+    
+        const allUsers = await getAllUsers();
+        let likedIds = [];
+    
+        if (userId) {
+            const currentUser = await findUserById(userId);
+            if (currentUser) {
+              
+              likedIds = Array.isArray(currentUser.likes)
+                ? currentUser.likes.map(id => id.toString())
+                : [];
+      
+              console.log('New user likes:', likedIds); 
+            } else {
+              console.warn('User not found for userId:', userId);
+            }
+          }
+    
+        const safeUsers = allUsers
+          .filter(u => u._id.toString() !== userId)
+          .map(({ _id, username, bio, hobbies, createdAt }) => ({
+            _id,
+            username,
+            bio,
+            hobbies,
+            createdAt,
+            liked: likedIds.includes(_id.toString())
+          }));
+    
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(safeUsers));
+        return;
     } catch (err) {
       console.error('Get profiles error:', err.message);
       res.writeHead(500, { 'Content-Type': 'application/json' });

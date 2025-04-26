@@ -12,7 +12,7 @@ const userSchema = new Schema({
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         status: String
     }],
-    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }],
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     createdAt: { type: Date, default: Date.now },
     role: { type: String, enum: ["user", "admin"], default: "user" },
 });

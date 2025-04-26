@@ -4,7 +4,12 @@ const BACKEND_URL = "http://localhost:3000";
 
 async function fetchProfiles() {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/profiles`);
+    const userId = localStorage.getItem('userId');
+    const url = userId 
+      ? `${BACKEND_URL}/api/profiles?userId=${userId}`
+      : `${BACKEND_URL}/api/profiles`;
+
+    const res = await fetch(url);
     profiles = await res.json();
     showProfile();
   } catch (err) {
@@ -22,7 +27,7 @@ function showProfile() {
     <p><small>Joined: ${new Date(p.createdAt).toLocaleDateString()}</small></p>
   `;
 
-  updateLikeButton(p._id);
+  updateLikeButton(p.liked);
 }
 
 function nextProfile() {
@@ -42,34 +47,20 @@ function prevProfile() {
   showProfile();
 }
 
-async function updateLikeButton(toUserId) {
-  const fromUserId = localStorage.getItem('userId');
+function updateLikeButton(liked) {
   const likeBtn = document.getElementById('likeBtn');
-
-  if (!fromUserId) {
+  if (!localStorage.getItem('userId')) {
     likeBtn.textContent = "Like";
     likeBtn.className = "like";
     return;
   }
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/users/profile?username=${localStorage.getItem('username')}`);
-    const user = await res.json();
-
-    const liked = user.matches.some(match => {
-      const matchId = typeof match.userId === 'object' ? match.userId._id : match.userId;
-      return matchId === toUserId;
-    });
-
-    likeBtn.textContent = liked ? '❤️ Unlike' : 'Like';
-    likeBtn.className = liked ? 'liked' : 'like';
-  } catch (err) {
-    console.error("Error checking like status:", err);
-  }
+  likeBtn.textContent = liked ? '❤️ Unlike' : 'Like';
+  likeBtn.className = liked ? 'liked' : 'like';
 }
 
 async function likeProfile() {
-  const toUserId = profiles[currentIndex]._id;
+  const p = profiles[currentIndex];
+  const toUserId = p._id;
   const fromUserId = localStorage.getItem('userId');
   const likeBtn = document.getElementById('likeBtn');
 
@@ -87,8 +78,12 @@ async function likeProfile() {
 
     const data = await res.json();
 
+    // Update button appearance immediately
     likeBtn.textContent = data.liked ? '❤️ Unlike' : 'Like';
     likeBtn.className = data.liked ? 'liked' : 'like';
+
+    // Update profile's liked status locally
+    profiles[currentIndex].liked = data.liked;
 
   } catch (err) {
     console.error("Error liking profile:", err);

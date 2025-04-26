@@ -2,9 +2,9 @@ import http from 'http';
 import fs from 'fs';
 import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser } from './index.js';
 import bcrypt from 'bcrypt';
 import { handleLikeRequest } from './liking.js';
+import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser, findUserById } from './index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -325,16 +325,32 @@ if (url.startsWith('/api/users/profile') && method === 'GET') {
     return;
 }
 
-  if (url === '/api/profiles' && method === 'GET') {
+if (url.startsWith('/api/profiles') && method === 'GET') {
     try {
-      const users = await getAllUsers();
-      const safeUsers = users.map(({ _id, username, bio, hobbies, createdAt }) => ({
-        _id,
-        username,
-        bio,
-        hobbies,
-        createdAt,
-      }));
+      const urlObj = new URL(req.url, `http://${req.headers.host}`);
+      const userId = urlObj.searchParams.get('userId');
+  
+      const allUsers = await getAllUsers();
+      let likedIds = [];
+  
+      if (userId) {
+        const currentUser = await findUserById(userId);
+        if (currentUser) {
+          likedIds = currentUser.likes.map(id => id.toString());
+        }
+      }
+  
+      const safeUsers = allUsers
+        .filter(u => u._id.toString() !== userId)
+        .map(({ _id, username, bio, hobbies, createdAt }) => ({
+          _id,
+          username,
+          bio,
+          hobbies,
+          createdAt,
+          liked: likedIds.includes(_id.toString())
+        }));
+  
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(safeUsers));
     } catch (err) {
@@ -343,12 +359,8 @@ if (url.startsWith('/api/users/profile') && method === 'GET') {
       res.end(JSON.stringify({ message: 'Server error while fetching profiles' }));
     }
     return;
-  }
-
-  res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ message: 'API endpoint not found' }));
-  return;
-}
+        }
+    }
 
 if (url === '/' || url === '') {
     url = 'index.html';

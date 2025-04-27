@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
+    <link rel="stylesheet" href="about.css"> <!-- Still using about.css! -->
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: 8672FF;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.6); /* dark semi-transparent background */
+            color: white;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
         }
         .navbar {
             background-color: #333;
@@ -28,70 +37,54 @@
             background-color: #ddd;
             color: black;
         }
-        .container {
-            
-            padding: 20px;
+        h1, h3, .bio-label {
+            color: white;
         }
-        h1 {
-            font-size: 30px;
-            font-weight: 900; /*Extra bold*/
-        }
-
-        h3 {
-            font-size: 18px;
-            color: black;
-            margin-bottom: 15px;
-        }
-
         ul {
-            list-style-type: none; /* Remove default bullets */
+            list-style-type: none;
             padding-left: 20px;
+            text-align: left;
         }
-
-        /* Style for main categories */
         .hobby-item {
             cursor: pointer;
             font-size: 18px;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
+            color: white;
         }
-
         .hobby-item::before {
-            content: "•"; /* Default bullet */
+            content: "•";
             font-size: 22px;
             margin-right: 10px;
-            color: black;
+            color: white;
             transition: all 0.3s ease;
         }
-
-        /* When selected, bullet gets filled and larger */
         .selected::before {
-            content: "●"; /* Filled bullet */
+            content: "●";
             font-size: 26px;
-            color: black;
+            color: white;
         }
-
-        /* Subcategory list - Initially hidden */
         .subcategory {
             display: none;
             padding-left: 40px;
             list-style-type: none;
         }
-
         .subcategory .hobby-item::before {
-            content: "•"; /* Default smaller bullet */
             font-size: 18px;
         }
-
-        .subcategory .selected::before {
-            content: "●"; /* Filled bullet */
-            font-size: 22px;
-            color: black;
+        .bio-textarea {
+            width: 100%;
+            height: 100px;            
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+            resize: vertical;
         }
-
-        /* Style for main buttons */
         button {
+            margin-top: 10px;
             padding: 12px 20px;
             font-size: 18px;
             cursor: pointer;
@@ -99,68 +92,18 @@
             background-color: blue;
             color: white;
             border-radius: 5px;
-            margin-left: 10px;
             transition: background-color 0.3s;
         }
-
-        /* Smaller buttons for subcategories */
-        .subcategory button {
-            padding: 6px 10px; /* Half the size */
-            font-size: 14px;
-            font-weight: bold;
-            background: none;
-            color: black;
+        .submit-button {
+            margin-top: 30px;
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
-
-    /* Hover effect ONLY for main category buttons */
-    .hobby-item > button:hover {
-        background-color: darkblue;
-    }
-
-    /* Remove hover effect from subcategory buttons */
-    .subcategory button:hover {
-        background-color: transparent; /* No background change */
-        color: black; /* Keep text color unchanged */
-    }
-
-    .bio-section {
-        margin: 30px 0;
-        max-width: 600px;
-    }
-
-    .bio-label {
-        display: block;
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-
-    .bio-textarea {
-        width: 100%;
-        height: 100px;            
-        padding: 10px;
-        font-size: 16px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        margin-bottom: 15px;
-        resize: vertical;
-    }
-        
-    .submit-button {
-        margin-top: 30px;
-        padding: 12px 24px;
-        font-size: 18px;
-        background-color: green;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .submit-button:hover {
-        background-color: darkgreen;
-    }
-
     </style>
 </head>
 <body>
@@ -174,71 +117,69 @@
         <a href="explore.html">Explore</a>
     </div>
 
-    <h1>User Profile</h1>
+    <div class="container">
+        <h1>User Profile</h1>
 
-    <div class="bio-section">
-        <span class="bio-label">About Me:</span>
-        <textarea id="bio-input" class="bio-textarea" placeholder="Tell us about yourself..."></textarea>
+        <div class="bio-section">
+            <span class="bio-label">About Me:</span>
+            <textarea id="bio-input" class="bio-textarea" placeholder="Tell us about yourself..."></textarea>
+        </div>
+
+        <h3>Please select at least one hobby</h3>
+
+        <ul>
+            <li class="hobby-item" onclick="toggleSelection(this, 'gamingSub')">
+                <button>Gaming</button>
+            </li>
+            <ul id="gamingSub" class="subcategory">
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>PC Gaming</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Console Gaming</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Mobile Gaming</button></li>
+            </ul>
+
+            <li class="hobby-item" onclick="toggleSelection(this, 'artSub')">
+                <button>Art</button>
+            </li>
+            <ul id="artSub" class="subcategory">
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Painting</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Sketching</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Photography</button></li>
+            </ul>
+
+            <li class="hobby-item" onclick="toggleSelection(this, 'outdoorSub')">
+                <button>Outdoor Activities</button>
+            </li>
+            <ul id="outdoorSub" class="subcategory">
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Hiking</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Cycling</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Camping</button></li>
+            </ul>
+
+            <li class="hobby-item" onclick="toggleSelection(this, 'musicSub')">
+                <button>Music</button>
+            </li>
+            <ul id="musicSub" class="subcategory">
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Rock</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Jazz</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Classical</button></li>
+            </ul>
+
+            <li class="hobby-item" onclick="toggleSelection(this, 'readingSub')">
+                <button>Reading</button>
+            </li>
+            <ul id="readingSub" class="subcategory">
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Fiction</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Non-Fiction</button></li>
+                <li class="hobby-item" onclick="toggleSelection(this)"><button>Mystery</button></li>
+            </ul>
+        </ul>
+
+        <button id="submit-button" class="submit-button">Save Profile</button>
     </div>
-
-    <h3>Please select at least one hobby</h3>
-
-    <ul>
-        <!-- Main Hobbies -->
-        <li class="hobby-item" onclick="toggleSelection(this, 'gamingSub')">
-            <button>Gaming</button>
-        </li>
-        <ul id="gamingSub" class="subcategory">
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>PC Gaming</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Console Gaming</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Mobile Gaming</button></li>
-        </ul>
-
-        <li class="hobby-item" onclick="toggleSelection(this, 'artSub')">
-            <button>Art</button>
-        </li>
-        <ul id="artSub" class="subcategory">
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Painting</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Sketching</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Photography</button></li>
-        </ul>
-
-        <li class="hobby-item" onclick="toggleSelection(this, 'outdoorSub')">
-            <button>Outdoor Activities</button>
-        </li>
-        <ul id="outdoorSub" class="subcategory">
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Hiking</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Cycling</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Camping</button></li>
-        </ul>
-
-        <li class="hobby-item" onclick="toggleSelection(this, 'musicSub')">
-            <button>Music</button>
-        </li>
-        <ul id="musicSub" class="subcategory">
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Rock</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Jazz</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Classical</button></li>
-        </ul>
-
-        <li class="hobby-item" onclick="toggleSelection(this, 'readingSub')">
-            <button>Reading</button>
-        </li>
-        <ul id="readingSub" class="subcategory">
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Fiction</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Non-Fiction</button></li>
-            <li class="hobby-item" onclick="toggleSelection(this)"><button>Mystery</button></li>
-        </ul>
-    </ul>
-
-    <button id="submit-button" class="submit-button">Save Profile</button>
 
     <script>
         function toggleSelection(selectedItem, subcategoryId = null) {
-            // Toggle selection state
             selectedItem.classList.toggle("selected");
-
-            // If there's a subcategory, show or hide it
             if (subcategoryId) {
                 let subcategory = document.getElementById(subcategoryId);
                 if (selectedItem.classList.contains("selected")) {
@@ -250,8 +191,8 @@
         }
     </script>
 
-<script src="validation.js"></script>
-<script src="hobby-handler.js"></script>
+    <script src="validation.js"></script>
+    <script src="hobby-handler.js"></script>
 
 </body>
 </html>

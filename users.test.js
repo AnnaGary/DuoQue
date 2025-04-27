@@ -37,6 +37,5 @@ describe('Users Model', () => {
     expect(error).toBeDefined();
     expect(error.errors.username).toBeDefined();
     expect(error.errors.password).toBeDefined();
-    //expect(error.errors.hobbies).toBeDefined();
-  });
+  });  
 });

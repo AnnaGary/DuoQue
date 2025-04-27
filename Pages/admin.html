@@ -38,6 +38,13 @@
             margin-bottom: 20px;
             border-radius: 5px;
         }
+        .panel-section {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
         .user-list {
             background-color: white;
             border-radius: 5px;
@@ -64,6 +71,7 @@
             border: none;
             cursor: pointer;
             border-radius: 4px;
+            margin-right: 5px;
         }
         .btn-primary {
             background-color: #8672FF;
@@ -71,6 +79,106 @@
         }
         .btn-danger {
             background-color: #ff4d4d;
+            color: white;
+        }
+        .btn-success {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-warning {
+            background-color: #ff9800;
+            color: white;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-danger {
+            background-color: #ff4d4d;
+            color: white;
+        }
+        .badge-success {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab-navigation {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .tab.active {
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            background-color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+        }
+        .report-details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .btn-dark {
+            background-color: #333333;
             color: white;
         }
     </style>
@@ -98,25 +206,121 @@
                     <tr>
                         <th>Username</th>
                         <th>Created At</th>
+                        <th>Last Login</th>
                         <th>Role</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="usersList">
-                    //placeholder for user data
                 </tbody>
             </table>
         </div>
     </div>
 
+    <div id="reportsTab" class="tab-content panel-section">
+        <h2>User Reports</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Report Date</th>
+                    <th>Reported User</th>
+                    <th>Reported By</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reportsList">
+                <!-- Reports data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="activityTab" class="tab-content panel-section">
+        <h2>User Activity Logs</h2>
+        <div class="form-group">
+            <label for="activityUserFilter">Filter by Username:</label>
+            <input type="text" id="activityUserFilter" placeholder="Enter username">
+            <button class="btn btn-primary" onclick="filterActivityLogs()">Filter</button>
+            <button class="btn btn-warning" onclick="resetActivityFilter()">Reset</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Username</th>
+                    <th>Action</th>
+                    <th>IP Address</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="activityList">
+                <!-- Activity data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Ban User Modal -->
+<div id="banModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('banModal')">&times;</span>
+        <h2>Ban User</h2>
+        <div class="form-group">
+            <label for="banReason">Reason for Ban:</label>
+            <textarea id="banReason" placeholder="Enter reason for banning this user"></textarea>
+        </div>
+        <input type="hidden" id="banUserId">
+        <button class="btn btn-danger" onclick="confirmBanUser()">Confirm Ban</button>
+        <button class="btn" onclick="closeModal('banModal')">Cancel</button>
+    </div>
+</div>
+
+<!-- Report Details Modal -->
+<div id="reportModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('reportModal')">&times;</span>
+        <h2>Report Details</h2>
+        <div id="reportDetails" class="report-details">
+            <!-- Report details will be loaded here -->
+        </div>
+        <div class="form-group">
+            <label for="reportStatus">Update Status:</label>
+            <select id="reportStatus">
+                <option value="pending">Pending</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="dismissed">Dismissed</option>
+            </select>
+        </div>
+        <input type="hidden" id="reportId">
+        <button class="btn btn-primary" onclick="updateReportStatus()">Update Status</button>
+        <button class="btn" onclick="closeModal('reportModal')">Close</button>
+    </div>
+
+    <div class="tab-navigation">
+        <div class="tab active" onclick="openTab(event, 'usersTab')">Users</div>
+        <div class="tab" onclick="openTab(event, 'reportsTab')">Reports</div>
+        <div class="tab" onclick="openTab(event, 'activityTab')">Activity</div>
+    </div>
+    
+    <div id="usersTab" class="tab-content active panel-section">
+        <!-- Your user list table goes here -->
+    </div>
+</div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+
+    let currentAdmin = '';
+    document.addEventListener('DOMContentLoaded', function() {
     const currentUser = localStorage.getItem('username');
     
     if (!currentUser) {
         window.location.href = '/login.html';
         return;
     }
+
+    currentAdmin = currentUser;
 
     fetch(`/api/users/check-admin?username=${currentUser}`)
         .then(response => response.json())
@@ -126,6 +330,8 @@
                 window.location.href = '/';
             } else {
                 loadUsers();
+                loadReports();
+                loadActivityLogs();
             }
         })
         .catch(error => {
@@ -134,45 +340,71 @@
             window.location.href = '/';
         });
     
-    function loadUsers() {
-        fetch('/api/users/all?username=' + currentUser)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Not authorized');
-                }
-                return response.json();
-            })
-            .then(users => {
-                const usersList = document.getElementById('usersList');
-                usersList.innerHTML = '';
-                
-                users.forEach(user => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${user.username}</td>
-                        <td>${new Date(user.createdAt).toLocaleDateString()}</td>
-                        <td>${user.role || 'user'}</td>
-                        <td>
-                            <button class="btn btn-primary" onclick="editUser('${user._id}')">Edit</button>
-                            <button class="btn btn-danger" onclick="deleteUser('${user._id}')">Delete</button>
-                        </td>
-                    `;
-                    usersList.appendChild(row);
+        window.openTab = function(event, tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+};
+
+        function loadUsers() {
+            fetch(`/api/users/all?username=${currentAdmin}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Not authorized');
+                    }
+                    return response.json();
+                })
+                .then(users => {
+                    const usersList = document.getElementById('usersList');
+                    usersList.innerHTML = '';
+                    
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        const createdAt = new Date(user.createdAt).toLocaleDateString();
+                        const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never';
+                        
+                        // Determine user status badge
+                        const statusBadge = user.isBanned 
+                            ? `<span class="badge badge-danger">Banned</span>` 
+                            : `<span class="badge badge-success">Active</span>`;
+                        
+                        // Create action buttons based on user status
+                        const banUnbanBtn = user.isBanned
+                            ? `<button class="btn btn-success" onclick="unbanUser('${user._id}')">Unban</button>`
+                            : `<button class="btn btn-danger" onclick="showBanModal('${user._id}')">Ban</button>`;
+                        
+                        row.innerHTML = `
+                            <td>${user.username}</td>
+                            <td>${createdAt}</td>
+                            <td>${lastLogin}</td>
+                            <td>${user.role || 'user'}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="viewUserActivity('${user._id}')">Activity</button>
+                                ${banUnbanBtn}
+                                <button class="btn btn-dark" onclick="deleteUser('${user._id}')">Delete</button>
+                            </td>
+                        `;
+                        usersList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
+                    if (error.message === 'Not authorized') {
+                        alert('You are not authorized to view this content');
+                        window.location.href = '/';
+                    }
                 });
-            })
-            .catch(error => {
-                console.error('Error loading users:', error);
-                if (error.message === 'Not authorized') {
-                    alert('You are not authorized to view this content');
-                    window.location.href = '/';
-                }
-            });
-    }
-    
-    window.editUser = function(userId) {
-        alert('Edit user: ' + userId);
-        // Implement edit functionality
-    };
+        }
     
     window.deleteUser = function(userId) {
         if (confirm('Are you sure you want to delete this user?')) {
@@ -195,6 +427,309 @@
             });
         }
     };
+    function loadReports() {
+            fetch(`/api/reports?username=${currentAdmin}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Not authorized');
+                    }
+                    return response.json();
+                })
+                .then(reports => {
+                    const reportsList = document.getElementById('reportsList');
+                    reportsList.innerHTML = '';
+                    
+                    reports.forEach(report => {
+                        const row = document.createElement('tr');
+                        const reportDate = new Date(report.createdAt).toLocaleDateString();
+                        
+                        // Determine report status badge
+                        let statusBadge;
+                        switch(report.status) {
+                            case 'reviewed':
+                                statusBadge = '<span class="badge badge-success">Reviewed</span>';
+                                break;
+                            case 'dismissed':
+                                statusBadge = '<span class="badge badge-danger">Dismissed</span>';
+                                break;
+                            default:
+                                statusBadge = '<span class="badge badge-warning">Pending</span>';
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${reportDate}</td>
+                            <td>${report.reportedUser.username}</td>
+                            <td>${report.reportedBy.username}</td>
+                            <td>${report.reason}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="viewReportDetails('${report._id}')">Details</button>
+                            </td>
+                        `;
+                        reportsList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading reports:', error);
+                });
+        }
+        
+        // Load activity logs
+        function loadActivityLogs(username = '') {
+            let url = `/api/activity-logs?adminUsername=${currentAdmin}`;
+            if (username) {
+                url += `&username=${username}`;
+            }
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Not authorized');
+                    }
+                    return response.json();
+                })
+                .then(logs => {
+                    const activityList = document.getElementById('activityList');
+                    activityList.innerHTML = '';
+                    
+                    logs.forEach(log => {
+                        const row = document.createElement('tr');
+                        const logDate = new Date(log.createdAt).toLocaleString();
+                        
+                        row.innerHTML = `
+                            <td>${logDate}</td>
+                            <td>${log.userId.username}</td>
+                            <td>${log.action}</td>
+                            <td>${log.ip || 'N/A'}</td>
+                            <td>${formatActivityDetails(log.details)}</td>
+                        `;
+                        activityList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading activity logs:', error);
+                    document.getElementById('activityList').innerHTML = 
+                '<tr><td colspan="5">Error loading activity logs. Please try again later.</td></tr>';
+                });
+        }
+        
+        // Format activity details
+        function formatActivityDetails(details) {
+            if (!details) return 'No details';
+            
+            if (typeof details === 'object') {
+                return Object.entries(details)
+                    .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+                    .join('<br>');
+            }
+            
+            return details;
+        }
+        
+        // Filter activity logs by username
+        window.filterActivityLogs = function() {
+            const username = document.getElementById('activityUserFilter').value.trim();
+            loadActivityLogs(username);
+        }
+        
+        // Reset activity filter
+        window.resetActivityFilter = function() {
+            document.getElementById('activityUserFilter').value = '';
+            loadActivityLogs();
+        }
+        
+        // Show ban user modal
+        window.showBanModal = function(userId) {
+            console.log("Showing ban modal for user:", userId);
+            document.getElementById('banUserId').value = userId;
+            document.getElementById('banReason').value = '';
+            document.getElementById('banModal').style.display = 'block';
+        };
+        
+        // Close any modal
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        };
+        
+        // Confirm ban user
+        window.confirmBanUser = function() {
+            const userId = document.getElementById('banUserId').value;
+            const reason = document.getElementById('banReason').value;
+            
+            if (!reason.trim()) {
+                alert('Please provide a reason for the ban');
+                return;
+            }
+
+            console.log("Sending ban request for user:", userId, "with reason:", reason);
+            
+            fetch(`/api/users/ban?username=${currentAdmin}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId,
+                    reason
+                })
+            })
+            .then(response => {
+        console.log("Ban response status:", response.status);
+        // Log the actual response
+        return response.text().then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error("Non-JSON response:", text);
+                return { success: false, message: "Invalid server response" };
+            }
+        });
+    })
+            .then(data => {
+                if (data.success) {
+                    alert('User has been banned');
+                    closeModal('banModal');
+                    loadUsers();
+                } else {
+                    alert(data.message || 'Failed to ban user');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while banning the user');
+            });
+        };
+        
+        // Unban user
+        window.unbanUser = function(userId) {
+            if (confirm('Are you sure you want to unban this user?')) {
+                fetch(`/api/users/unban?username=${currentAdmin}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('User has been unbanned');
+                        loadUsers();
+                    } else {
+                        alert(data.message || 'Failed to unban user');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while unbanning the user');
+                });
+            }
+        };
+        
+        // View user activity
+        window.viewUserActivity = function(userId) {
+            console.log("Viewing activity for user:", userId);
+            // Switch to activity tab and filter by this user
+            fetch(`/api/users/username-by-id?adminUsername=${currentAdmin}&userId=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.username) {
+                        // Switch to activity tab
+                        openTab({ currentTarget: document.querySelector('.tab[onclick*="activityTab"]') }, 'activityTab');
+                        
+                        // Set filter and load data
+                        document.getElementById('activityUserFilter').value = data.username;
+                        filterActivityLogs();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        };
+        
+        // View report details
+        function viewReportDetails(reportId) {
+            fetch(`/api/reports/${reportId}?username=${currentAdmin}`)
+                .then(response => response.json())
+                .then(report => {
+                    const reportDetails = document.getElementById('reportDetails');
+                    const reportDate = new Date(report.createdAt).toLocaleString();
+                    
+                    reportDetails.innerHTML = `
+                        <p><strong>Date:</strong> ${reportDate}</p>
+                        <p><strong>Reported User:</strong> ${report.reportedUser.username}</p>
+                        <p><strong>Reported By:</strong> ${report.reportedBy.username}</p>
+                        <p><strong>Reason:</strong> ${report.reason}</p>
+                        <p><strong>Details:</strong> ${report.details || 'No additional details provided'}</p>
+                        <p><strong>Current Status:</strong> ${report.status}</p>
+                    `;
+                    
+                    // Set selected status in dropdown
+                    document.getElementById('reportStatus').value = report.status;
+                    document.getElementById('reportId').value = report._id;
+                    
+                    // Show modal
+                    document.getElementById('reportModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading report details');
+                });
+        }
+        
+        // Update report status
+        function updateReportStatus() {
+            const reportId = document.getElementById('reportId').value;
+            const status = document.getElementById('reportStatus').value;
+            
+            fetch(`/api/reports/update-status?username=${currentAdmin}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    reportId,
+                    status
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Report status updated');
+                    closeModal('reportModal');
+                    loadReports();
+                } else {
+                    alert(data.message || 'Failed to update report status');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the report');
+            });
+        }
+        
+        // Delete user function
+        function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                fetch(`/api/users/delete?username=${currentAdmin}&userId=${userId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('User deleted successfully');
+                        loadUsers();
+                    } else {
+                        alert(data.message || 'Failed to delete user');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the user');
+                });
+            }
+        }
+        
 });
     </script>
 </body>

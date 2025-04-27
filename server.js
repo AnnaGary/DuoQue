@@ -3,8 +3,9 @@ import fs from 'fs';
 import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { Users, Report, ActivityLog } from './users.js';
-import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser } from './index.js';
 import bcrypt from 'bcrypt';
+import { handleLikeRequest } from './liking.js';
+import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser, findUserById } from './index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -102,6 +103,10 @@ const server = http.createServer(async (req, res) => {
             return;
         }
 
+        if (req.method === 'POST' && req.url === '/api/matches/like') {
+            return handleLikeRequest(req, res);
+        }
+
     if (url === '/api/users/signup' && method === 'POST') {
         try {
         const userData = await getRequestBody(req);
@@ -120,6 +125,7 @@ const server = http.createServer(async (req, res) => {
             bio: '',
             hobbies: [],
             matches: [],
+            likes: [], 
             createdAt: new Date().toISOString(),
             role: 'user' // Default role
         });
@@ -407,6 +413,10 @@ if (url === '/api/users/update-bio' && method === 'POST') {
     return;
 }
 
+if (req.method === 'POST' && req.url === '/api/matches/like') {
+    return handleLikeRequest(req, res);
+  }
+
 if (url.startsWith('/api/users/profile') && method === 'GET') {
     try {
       const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
@@ -470,25 +480,48 @@ if (url.startsWith('/api/users/profile') && method === 'GET') {
     return;
 }
 
-  if (url === '/api/profiles' && method === 'GET') {
+if (url.startsWith('/api/profiles') && method === 'GET') {
     try {
-      const users = await getAllUsers();
-      const safeUsers = users.map(({ _id, username, bio, hobbies, createdAt }) => ({
-        _id,
-        username,
-        bio,
-        hobbies,
-        createdAt,
-      }));
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(safeUsers));
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const userId = urlObj.searchParams.get('userId');
+    
+        const allUsers = await getAllUsers();
+        let likedIds = [];
+    
+        if (userId) {
+            const currentUser = await findUserById(userId);
+            if (currentUser) {
+              
+              likedIds = Array.isArray(currentUser.likes)
+                ? currentUser.likes.map(id => id.toString())
+                : [];
+      
+              console.log('New user likes:', likedIds); 
+            } else {
+              console.warn('User not found for userId:', userId);
+            }
+          }
+    
+        const safeUsers = allUsers
+          .filter(u => u._id.toString() !== userId)
+          .map(({ _id, username, bio, hobbies, createdAt }) => ({
+            _id,
+            username,
+            bio,
+            hobbies,
+            createdAt,
+            liked: likedIds.includes(_id.toString())
+          }));
+    
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(safeUsers));
+        return;
     } catch (err) {
       console.error('Get profiles error:', err.message);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ message: 'Server error while fetching profiles' }));
     }
     return;
-  }
 
   if (url.startsWith('/api/users/ban') && method === 'POST') {
     try {

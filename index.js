@@ -59,7 +59,7 @@ const getAllUsers = async () => {
 
 const findUserByUsername = async (username) => {
     try {
-        const user = await Users.findOne({ username }); // ← Removed '-password'
+        const user = await Users.findOne({ username }); 
         return user;
     } catch (error) {
         console.error(`Error finding user: ${error.message}`);
@@ -69,7 +69,7 @@ const findUserByUsername = async (username) => {
 
 const findUserById = async (userId) => {
     try {
-      return await User.findById(userId);
+      return await Users.findById(userId);
     } catch (error) {
       console.error(`Error finding user by ID: ${error.message}`);
       throw error;
@@ -111,6 +111,7 @@ const user = new Users({
             "status": "matched"
         }
     ],
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     "createdAt": "2025-02-27T15:30:00Z" 
 })
 

@@ -1,6 +1,5 @@
 let profiles = [];
 let currentIndex = 0;
-
 const fromUserId = "660d0a1e1234567890abcdef";
 const currentUser = localStorage.getItem('username') || "current_user"; // Fallback if not logged in
 
@@ -9,48 +8,43 @@ const BACKEND_URL = "http://localhost:3000";
 
 async function fetchProfiles() {
   try {
-    console.log("Fetching profiles from:", `${BACKEND_URL}/api/profiles`);
-    const res = await fetch(`${BACKEND_URL}/api/profiles`);
+    const userId = localStorage.getItem('userId');
+    const url = userId 
+      ? `${BACKEND_URL}/api/profiles?userId=${userId}`
+      : `${BACKEND_URL}/api/profiles`;
 
-    if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
-
+    const res = await fetch(url);
     profiles = await res.json();
-    console.log("Fetched profiles:", profiles);
-
-    if (!profiles.length) {
-      document.getElementById('profileCard').innerText = "No profiles available.";
-      return;
-    }
-
     showProfile();
   } catch (err) {
-    console.error("Fetch error:", err);
     document.getElementById('profileCard').innerText = "Failed to load profiles.";
+    console.error(err);
   }
 }
 
 function showProfile() {
-  if (!profiles.length) {
-    document.getElementById('profileCard').innerText = "No profiles available.";
-    return;
-  }
-
   const p = profiles[currentIndex];
-  console.log("Showing profile:", p);
-
   document.getElementById('profileCard').innerHTML = `
     <button class="report-btn" onclick="openReportModal()">⚠️ Report</button>
     <h2>@${p.username}</h2>
     <p><strong>Bio:</strong> ${p.bio || 'No bio provided'}</p>
     <p><strong>Hobbies:</strong> ${p.hobbies?.join(', ') || 'None listed'}</p>
-    <p><strong>Location:</strong> ${p.location || 'Unknown'}</p>
     <p><small>Joined: ${new Date(p.createdAt).toLocaleDateString()}</small></p>
   `;
+
+  updateLikeButton(p.liked);
 }
 
 function nextProfile() {
+  resetLikeButton();
   currentIndex = (currentIndex + 1) % profiles.length;
   showProfile();
+}
+
+function resetLikeButton() {
+  const likeBtn = document.getElementById('likeBtn');
+  likeBtn.textContent = "Like";
+  likeBtn.className = "like";
 }
 
 function prevProfile() {
@@ -58,8 +52,28 @@ function prevProfile() {
   showProfile();
 }
 
+function updateLikeButton(liked) {
+  const likeBtn = document.getElementById('likeBtn');
+  if (!localStorage.getItem('userId')) {
+    likeBtn.textContent = "Like";
+    likeBtn.className = "like";
+    return;
+  }
+  likeBtn.textContent = liked ? '❤️ Unlike' : 'Like';
+  likeBtn.className = liked ? 'liked' : 'like';
+}
+
 async function likeProfile() {
-  const toUserId = profiles[currentIndex]._id;
+  const p = profiles[currentIndex];
+  const toUserId = p._id;
+  const fromUserId = localStorage.getItem('userId');
+  const likeBtn = document.getElementById('likeBtn');
+
+  if (!fromUserId) {
+    alert("Please log in to like profiles.");
+    return;
+  }
+
   try {
     const res = await fetch(`${BACKEND_URL}/api/matches/like`, {
       method: "POST",
@@ -68,8 +82,14 @@ async function likeProfile() {
     });
 
     const data = await res.json();
-    alert(data.message);
-    nextProfile();
+
+    // Update button appearance immediately
+    likeBtn.textContent = data.liked ? '❤️ Unlike' : 'Like';
+    likeBtn.className = data.liked ? 'liked' : 'like';
+
+    // Update profile's liked status locally
+    profiles[currentIndex].liked = data.liked;
+
   } catch (err) {
     console.error("Error liking profile:", err);
     alert("Something went wrong while liking this profile.");

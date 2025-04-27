@@ -57,14 +57,6 @@ async function isUserAdmin(username) {
     }
 }
 
-  export async function findUserById(userId) {
-    try {
-      return await Users.findById(userId);
-    } catch (error) {
-      console.error(`Error finding user by ID: ${error.message}`);
-      throw error;
-    }
-  }
 
 //function to read request body
 const getRequestBody = (req) => {
@@ -522,6 +514,7 @@ if (url.startsWith('/api/profiles') && method === 'GET') {
       res.end(JSON.stringify({ message: 'Server error while fetching profiles' }));
     }
     return;
+}
 
   if (url.startsWith('/api/users/ban') && method === 'POST') {
     try {

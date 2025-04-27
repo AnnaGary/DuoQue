@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            padding: 10px 0;
+        }
+        .navbar a {
+            float: left;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-header {
+            background-color: #8672FF;
+            color: white;
+            padding: 15px;
+            border-radius: 5px 5px 0 0;
+            margin: -20px -20px 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            border: none;
+            background-color: #8672FF;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #7561e0;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/login.html">Login</a>
+        <a href="/about">About</a>
+        <a href="/Profile">Profile</a>
+        <a href="/explore.html">Explore</a>
+    </div>
+    
+    <div class="container">
+        <div class="form-header">
+            <h2>Report User</h2>
+            <p>Use this form to report inappropriate behavior</p>
+        </div>
+        
+        <div id="successMessage" class="message success">
+            Your report has been submitted successfully. Our admins will review it shortly.
+        </div>
+        
+        <div id="errorMessage" class="message error">
+            An error occurred. Please try again later.
+        </div>
+        
+        <form id="reportForm">
+            <div class="form-group">
+                <label for="reportedUser">Username to Report:</label>
+                <input type="text" id="reportedUser" name="reportedUser" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="reportReason">Reason for Report:</label>
+                <select id="reportReason" name="reportReason" required>
+                    <option value="">Select a reason</option>
+                    <option value="Inappropriate content">Inappropriate content</option>
+                    <option value="Harassment">Harassment or bullying</option>
+                    <option value="Fake profile">Fake profile</option>
+                    <option value="Spam">Spam or scam</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="reportDetails">Additional Details:</label>
+                <textarea id="reportDetails" name="reportDetails" placeholder="Please provide more specific details about the issue..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn">Submit Report</button>
+        </form>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = localStorage.getItem('username');
+            
+            if (!currentUser) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Check if username was passed in the URL (for direct reporting)
+            const urlParams = new URLSearchParams(window.location.search);
+            const reportUsername = urlParams.get('username');
+            
+            if (reportUsername) {
+                document.getElementById('reportedUser').value = reportUsername;
+            }
+            
+            document.getElementById('reportForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const reportedUsername = document.getElementById('reportedUser').value.trim();
+                const reason = document.getElementById('reportReason').value;
+                const details = document.getElementById('reportDetails').value.trim();
+                
+                // Basic validation
+                if (!reportedUsername || !reason) {
+                    showMessage('error', 'Please fill out all required fields.');
+                    return;
+                }
+                
+                // Don't allow self-reporting
+                if (reportedUsername.toLowerCase() === currentUser.toLowerCase()) {
+                    showMessage('error', 'You cannot report yourself.');
+                    return;
+                }
+                
+                // Submit the report
+                fetch('/api/reports/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: currentUser,
+                        reportedUsername: reportedUsername,
+                        reason: reason,
+                        details: details
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('success', 'Your report has been submitted successfully.');
+                        document.getElementById('reportForm').reset();
+                        
+                        // Redirect back to profile page after 3 seconds
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 3000);
+                    } else {
+                        showMessage('error', data.message || 'An error occurred while submitting your report.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('error', 'An error occurred. Please try again later.');
+                });
+            });
+            
+            function showMessage(type, message) {
+                const successMsg = document.getElementById('successMessage');
+                const errorMsg = document.getElementById('errorMessage');
+                
+                // Hide both messages first
+                successMsg.style.display = 'none';
+                errorMsg.style.display = 'none';
+                
+                if (type === 'success') {
+                    successMsg.textContent = message;
+                    successMsg.style.display = 'block';
+                } else {
+                    errorMsg.textContent = message;
+                    errorMsg.style.display = 'block';
+                }
+                
+                // Scroll to top to see the message
+                window.scrollTo(0, 0);
+            }
+        });
+    </script>
+</body>
+</html>

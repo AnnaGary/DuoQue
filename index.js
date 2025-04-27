@@ -23,6 +23,16 @@ const connectDB = async () => {
     }
   };
 
+  export async function deleteUser(userId) {
+    try {
+        await Users.findByIdAndDelete(userId);
+        console.log(`User ${userId} deleted successfully.`);
+    } catch (error) {
+        console.error(`Error deleting user: ${error.message}`);
+        throw error;
+    }
+}
+
 const addUser = async (userData) => {
     try {
         const newUser = new Users(userData);

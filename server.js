@@ -2,6 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { Users, Report, ActivityLog } from './users.js';
 import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser } from './index.js';
 import bcrypt from 'bcrypt';
 
@@ -25,6 +26,42 @@ async function isUserAdmin(username) {
     } catch (error) {
       console.error(`Error checking admin status: ${error.message}`);
       return false;
+    }
+  }
+
+  async function checkAdminAuth(req, res) {
+    try {
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const username = urlObj.searchParams.get('username');
+
+        if (!username) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Username is required' }));
+            return false;
+        }
+
+        const isAdmin = await isUserAdmin(username);
+        if (!isAdmin) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Not authorized' }));
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error(`Admin auth error: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Server error during auth' }));
+        return false;
+    }
+}
+
+  export async function findUserById(userId) {
+    try {
+      return await Users.findById(userId);
+    } catch (error) {
+      console.error(`Error finding user by ID: ${error.message}`);
+      throw error;
     }
   }
 
@@ -147,7 +184,45 @@ if (url.startsWith('/api/users/check-admin') && method === 'GET') {
     return;
 }
 
-if (url === '/api/users/delete' && method === 'DELETE') {
+if (url.startsWith('/api/activity-logs') && method === 'GET') {
+    try {
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const adminUsername = urlObj.searchParams.get('adminUsername');
+        const filterUsername = urlObj.searchParams.get('username');
+        
+        // Check if requester is an admin
+        const isAdmin = await isUserAdmin(adminUsername);
+        if (!isAdmin) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Not authorized' }));
+            return;
+        }
+        
+        let query = {};
+        if (filterUsername) {
+            const user = await findUserByUsername(filterUsername);
+            if (user) {
+                query.userId = user._id;
+            }
+        }
+        
+        // Find activity logs with populated user references
+        const logs = await ActivityLog.find(query)
+            .populate('userId')
+            .sort({ createdAt: -1 })
+            .limit(100);
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(logs));
+    } catch (error) {
+        console.error(`Error getting activity logs: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Server error' }));
+    }
+    return;
+}
+
+if (url.startsWith('/api/users/delete') && method === 'DELETE') {
     const isAdmin = await checkAdminAuth(req, res);
     if (!isAdmin) {
       // Already sent appropriate response in checkAdminAuth
@@ -164,7 +239,27 @@ if (url === '/api/users/delete' && method === 'DELETE') {
         return;
       }
       
-      //add delete user functionality here later
+      // Check if user exists
+      const user = await findUserById(userId);
+      if (!user) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false,
+          message: 'User not found' 
+        }));
+        return;
+      }
+      
+      // Delete the user
+      await Users.findByIdAndDelete(userId);
+      
+      // Log the deletion activity
+      await ActivityLog.create({
+        userId: userId,
+        action: 'user_deleted',
+        performedBy: urlObj.searchParams.get('username'), // Admin username
+        ip: 'test ip, replace in production'
+      });
       
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ 
@@ -182,7 +277,7 @@ if (url === '/api/users/delete' && method === 'DELETE') {
     return;
   }
 
-if (url === '/api/users/login' && method === 'POST') {
+  if (url === '/api/users/login' && method === 'POST') {
     try {
         const userData = await getRequestBody(req);
         const { username, password } = userData;
@@ -201,6 +296,25 @@ if (url === '/api/users/login' && method === 'POST') {
              return;
         }
 
+        if (user.isBanned) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                message: 'Your account has been suspended. Please contact the site administrator for assistance.'
+            }));
+            return;
+        }
+
+        // Update last login time
+        const lastLogin = new Date().toISOString();
+        await updateUser(user._id, { lastLogin });
+
+        // Log the login activity
+        await ActivityLog.create({
+            userId: user._id,
+            action: 'login',
+            ip: 'test ip, replace in production'
+        });
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             message: 'Login successful',
@@ -208,7 +322,8 @@ if (url === '/api/users/login' && method === 'POST') {
                 id: user._id,
                 username: user.username,
                 hobbies: user.hobbies,
-                role: user.role
+                role: user.role,
+                lastLogin
             }
         }));
     } catch (error) {
@@ -217,6 +332,45 @@ if (url === '/api/users/login' && method === 'POST') {
         res.end(JSON.stringify({ message: 'Server error' }));
     }
 
+    return;
+}
+
+if (url.startsWith('/api/users/username-by-id') && method === 'GET') {
+    try {
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const adminUsername = urlObj.searchParams.get('adminUsername');
+        const userId = urlObj.searchParams.get('userId');
+        
+        // Check if the requester is an admin
+        const isAdmin = await isUserAdmin(adminUsername);
+        if (!isAdmin) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Not authorized' }));
+            return;
+        }
+        
+        if (!userId) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'User ID is required' }));
+            return;
+        }
+        
+        // Find user by ID - you'll need to implement this function in your database logic
+        const user = await findUserById(userId);
+        
+        if (!user) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'User not found' }));
+            return;
+        }
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ username: user.username }));
+    } catch (error) {
+        console.error(`Error finding username by ID: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Server error' }));
+    }
     return;
 }
 
@@ -336,6 +490,122 @@ if (url.startsWith('/api/users/profile') && method === 'GET') {
     return;
   }
 
+  if (url.startsWith('/api/users/ban') && method === 'POST') {
+    try {
+        console.log("Ban endpoint hit");
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const adminUsername = urlObj.searchParams.get('username');
+        
+        // Check if requester is an admin
+        const isAdmin = await isUserAdmin(adminUsername);
+        if (!isAdmin) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'Not authorized' }));
+            return;
+        }
+        
+        const data = await getRequestBody(req);
+        console.log("Ban request data:", data);
+        const { userId, reason } = data;
+        
+        if (!userId || !reason) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'User ID and reason are required' }));
+            return;
+        }
+        
+        // Update user to ban
+        const updatedUser = await updateUser(userId, { 
+            isBanned: true,
+            banReason: reason,
+            bannedAt: new Date().toISOString(),
+            bannedBy: adminUsername
+        });
+        
+        // Log the ban action
+        await ActivityLog.create({
+            userId,
+            action: 'user_banned',
+            performedBy: adminUsername,
+            details: { reason },
+            ip: 'test ip, replace in production'
+        });
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+            success: true,
+            message: `User banned successfully. Reason: ${reason}`,
+            bannedUser: updatedUser
+        }));
+    } catch (error) {
+        console.error('Error banning user:', error.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, message: 'Server error banning user' }));
+    }
+    return;
+}
+if (url.startsWith('/api/users/unban') && method === 'POST') {
+    
+    try {
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const adminUsername = urlObj.searchParams.get('username');
+        
+        // Check if the requester is an admin
+        const isAdmin = await isUserAdmin(adminUsername);
+        if (!isAdmin) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                success: false,
+                message: 'Not authorized' 
+            }));
+            return;
+        }
+        
+        const data = await getRequestBody(req);
+        const { userId } = data;
+        
+        if (!userId) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                success: false,
+                message: 'User ID is required' 
+            }));
+            return;
+        }
+        
+        // Update user in database to remove banned status
+        const updatedUser = await updateUser(userId, { 
+            isBanned: false,
+            banReason: null,
+            unbannedAt: new Date().toISOString(),
+            unbannedBy: adminUsername
+        });
+        
+        // Log the action
+        await ActivityLog.create({
+            userId: userId,
+            action: 'user_unbanned',
+            performedBy: adminUsername,
+            ip: 'test ip, replace in production'
+        });
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+            success: true,
+            message: 'User unbanned successfully' 
+        }));
+    } catch (error) {
+        console.error(`Error unbanning user: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+            success: false,
+            message: 'Server error' 
+        }));
+    }
+    return;
+}
+  
+
   res.writeHead(404, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ message: 'API endpoint not found' }));
   return;
@@ -400,6 +670,8 @@ if (url === '/' || url === '') {
         });
         return;
     }
+
+    
     
     
     // Get the file extension

@@ -186,8 +186,7 @@
 <body>
     <div class="navbar">
         <a href="/">Home</a>
-        <a href="/login.html" id="login-btn">Login</a>
-        <a href="#" id="logout-btn" onclick="logout()" style="display: none;">Logout</a>
+        <a href="/login.html">Login</a>
         <a href="/about">About</a>
         <a href="/Profile">Profile</a>
         <a href="/admin">Admin</a>
@@ -735,17 +734,3 @@
     </script>
 </body>
 </html>
-
-<script>
-    const username = localStorage.getItem('username');
-    if (username) {
-        document.getElementById('logout-btn').style.display = 'inline-block'; // Forces logout button to be hidden if user is logged out
-        document.getElementById('login-btn').style.display = 'none'; // Forces login to be hidden if user is logged in
-    }
-    function logout() {
-        localStorage.removeItem('username'); // Clear login state
-        window.location.href = '/login.html'; // Redirect to login
-    }
-    </script>
-
-<script>

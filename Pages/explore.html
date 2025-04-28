@@ -74,6 +74,13 @@
     .swipe-right { background-color: #4CAF50; color: white; }
     .like { background-color: #ff4081; color: white; }
 
+    .recommendation-item {
+  background-color: rgba(255, 255, 255, 0.1); /* optional slight background */
+  padding: 15px;
+  margin: 15px 0; /* THIS adds vertical space */
+  border-radius: 10px;
+  text-align: center;
+}
     .report-btn {
       position: absolute;
       top: 100px;
@@ -161,8 +168,7 @@
 <body>
   <div class="navbar">
     <a href="/">Home</a>
-    <a href="/login.html" id="login-btn">Login</a>
-    <a href="#" id="logout-btn" onclick="logout()" style="display: none;">Logout</a>
+    <a href="/login.html">Login</a>
     <a href="/about">About</a>
     <a href="/Profile">Profile</a>
     <a href="/admin">Admin</a>
@@ -176,6 +182,102 @@
     <button id="likeBtn" class="like" onclick="likeProfile()">Like</button>
     <button class="swipe-right" onclick="nextProfile()">➡️ Swipe Right</button>
   </div>
+
+  <div class="container">  
+  
+    <button id="recommendationsBtn" class="recommendations-btn">Show Recommendations</button>
+  
+    <div id="recommendationsList" class="recommendations-list"></div>
+  </div>
+
+  <script src="swiper.js"></script>
+
+  <script>
+    let recommendationsVisible = false; // Track if recommendations are shown
+  
+    document.getElementById('recommendationsBtn').addEventListener('click', async () => {
+  const listDiv = document.getElementById('recommendationsList');
+
+  if (recommendationsVisible) {
+    listDiv.innerHTML = '';
+    recommendationsVisible = false;
+    document.getElementById('recommendationsBtn').innerText = 'Show Recommendations';
+  } else {
+    const username = localStorage.getItem('username');
+    const userId = localStorage.getItem('userId'); // <--- Make sure you also save this at login!
+
+    if (!username || !userId) {
+      alert('Please log in to see recommendations.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/users/recommendations?username=${username}`);
+      const data = await res.json();
+
+      listDiv.innerHTML = '';
+
+      if (!data.recommendations || data.recommendations.length === 0) {
+        listDiv.innerHTML = '<p>No users found with shared hobbies.</p>';
+      } else {
+        data.recommendations.forEach(user => {
+          const item = document.createElement('div');
+          item.className = 'recommendation-item';
+          item.innerHTML = `
+            <strong>@${user.username}</strong><br>
+            <small>Hobbies: ${user.hobbies.join(', ')}</small><br>
+            <button class="like-btn" data-userid="${user.id}">❤️ Like</button>
+          `;
+          listDiv.appendChild(item);
+        });
+
+        // Attach event listeners to each Like button
+        document.querySelectorAll('.like-btn').forEach(btn => {
+          btn.addEventListener('click', async (event) => {
+            const toUserId = btn.getAttribute('data-userid');
+
+            try {
+              const likeRes = await fetch('/api/matches/like', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fromUserId: userId, toUserId })
+              });
+
+              const likeData = await likeRes.json();
+              if (likeData.liked) {
+                btn.innerText = '💔 Unlike'; // Toggle button text
+              } else {
+                btn.innerText = '❤️ Like';
+              }
+            } catch (error) {
+              console.error('Error sending like:', error);
+            }
+          });
+        });
+      }
+
+      recommendationsVisible = true;
+      document.getElementById('recommendationsBtn').innerText = 'Hide Recommendations';
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      listDiv.innerHTML = '<p>Error loading recommendations.</p>';
+    }
+  }
+});
+
+  </script>
+
+  <script>
+    const username = localStorage.getItem('username');
+    if (username) {
+        document.getElementById('logout-btn').style.display = 'inline-block'; // Forces logout button to be hidden if user is logged out
+        document.getElementById('login-btn').style.display = 'none'; // Forces login to be hidden if user is logged in
+    }
+    function logout() {
+        localStorage.removeItem('username'); // Clear login state
+        window.location.href = '/login.html'; // Redirect to login
+    }
+    </script>
 
 <!-- Report Modal -->
 <div id="reportModal" class="modal">
@@ -217,17 +319,3 @@
   <script src="swiper.js"></script>
 </body>
 </html>
-
-<script>
-  const username = localStorage.getItem('username');
-  if (username) {
-      document.getElementById('logout-btn').style.display = 'inline-block'; // Forces logout button to be hidden if user is logged out
-      document.getElementById('login-btn').style.display = 'none'; // Forces login to be hidden if user is logged in
-  }
-  function logout() {
-      localStorage.removeItem('username'); // Clear login state
-      window.location.href = '/login.html'; // Redirect to login
-  }
-  </script>
-
-<script>

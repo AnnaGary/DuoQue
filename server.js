@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { Users, Report, ActivityLog } from './users.js';
 import bcrypt from 'bcrypt';
 import { handleLikeRequest } from './liking.js';
-import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser, findUserById } from './index.js';
+import { connectDB, addUser, getAllUsers, findUserByUsername, updateUser, findUserById, findMatchingUsers } from './index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -512,6 +512,36 @@ if (url.startsWith('/api/profiles') && method === 'GET') {
       console.error('Get profiles error:', err.message);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ message: 'Server error while fetching profiles' }));
+    }
+    return;
+}
+
+if (url.startsWith('/api/users/recommendations') && method === 'GET') {
+    try {
+        const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
+        const username = searchParams.get('username');
+
+        if (!username) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Username is required' }));
+            return;
+        }
+
+        const matches = await findMatchingUsers(username);
+
+        const safeMatches = matches.map(user => ({
+            id: user._id,
+            username: user.username,
+            bio: user.bio,
+            hobbies: user.hobbies,
+        }));
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ recommendations: safeMatches }));
+    } catch (error) {
+        console.error(`Error fetching recommendations: ${error.message}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Server error' }));
     }
     return;
 }

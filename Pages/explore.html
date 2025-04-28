@@ -74,9 +74,16 @@
     .swipe-right { background-color: #4CAF50; color: white; }
     .like { background-color: #ff4081; color: white; }
 
+    .recommendation-item {
+  background-color: rgba(255, 255, 255, 0.1); /* optional slight background */
+  padding: 15px;
+  margin: 15px 0; /* THIS adds vertical space */
+  border-radius: 10px;
+  text-align: center;
+}
     .report-btn {
       position: absolute;
-      top: 10px;
+      top: 100px;
       left: 10px;
       background-color: #ff5252;
       color: white;
@@ -176,11 +183,12 @@
     <button class="swipe-right" onclick="nextProfile()">➡️ Swipe Right</button>
   </div>
 
-  <!-- 📌 New: Recommendations Button -->
-  <button id="recommendationsBtn" class="recommendations-btn">Show Recommendations</button>
-
-  <!-- 📌 New: Where Recommendations Will Display -->
-  <div id="recommendationsList" class="recommendations-list"></div>
+  <div class="container">  
+  
+    <button id="recommendationsBtn" class="recommendations-btn">Show Recommendations</button>
+  
+    <div id="recommendationsList" class="recommendations-list"></div>
+  </div>
 
   <script src="swiper.js"></script>
 

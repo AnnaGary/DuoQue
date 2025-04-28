@@ -25,4 +25,18 @@ describe('Server Endpoints', () => {
     const res = await request('http://localhost:3000').get('/nonexistent');
     expect(res.statusCode).toBe(404);
   });
+
+    test('PUT /api/users/login should return 405 or 404', async () => {
+    const res = await request('http://localhost:3000')
+      .put('/api/users/login')
+      .send({ username: 'user', password: 'pass' });
+
+    expect([404, 405]).toContain(res.statusCode);
+  });
+
+  test('GET /style.css should return CSS content', async () => {
+    const res = await request('http://localhost:3000').get('/style.css');
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('text/css');
+  });
 });

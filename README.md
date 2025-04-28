@@ -32,9 +32,10 @@ Known Limitations?
  
 (How to run)
 
-	In order to have all prerequisites, run npm install supertest, and npm install bcrypt.
+	In order to have all prerequisites, run npm install.
 	In order to start the server, run "npm start"
 	In order to launch the testing suite, (server must be running) run "npm test"
+ 	For GUI testing, (server must be running) run "npx cypress open", click "E2E", then click "ui_button"
 
 Current State of Project:
 

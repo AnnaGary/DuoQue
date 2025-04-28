@@ -36,6 +36,12 @@ Known Limitations?
 	In order to start the server, run "npm start"
 	In order to launch the testing suite, (server must be running) run "npm test"
 
+Current State of Project:
+
+	As of 4/27/2025, DuoQue has implemented nearly every feature that we set out to implement. The only features that we did not have time to do were the custom chat system and the ability to view reports made by users against other users.
+
+	All other features promised, including database connectivity, adminstrative features, profile creation with bios and hobbies, toggle like/unlike, swiping through profiles, updating user profile, secure login and logout, and toggling between home, about, profile, explore, and admin.
+
 Video Demonstration:
 https://www.youtube.com/watch?v=Rorpycgea2s&ab_channel=PSPten
  

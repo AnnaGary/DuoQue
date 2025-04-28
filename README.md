@@ -13,6 +13,7 @@ Tools/Setup?
 
 	Jest for unit testing and integration testing
 	Supertest for API endpoint testing
+ 	Cypress testing Suite
 
 What is tested?
 

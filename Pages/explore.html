@@ -1,20 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Explore Profiles</title>
+  <link rel="stylesheet" href="about.css">
   <style>
     body {
-      font-family: Arial;
-      background-color: #f3f3f3;
+      font-family: Arial, sans-serif;
+      background-color: 8672FF;
       display: flex;
       flex-direction: column;
       align-items: center;
       margin: 0;
+      padding: 0;
     }
-    h1 {
-      margin-top: 40px;
+    .navbar {
+      width: 100%;
+      background-color: #333;
+      overflow: hidden;
+      padding: 10px 0;
     }
+    .navbar a {
+      float: left;
+      color: white;
+      text-align: center;
+      padding: 14px 16px;
+      text-decoration: none;
+      font-size: 17px;
+    }
+    .navbar a:hover {
+      background-color: #ddd;
+      color: black;
+         }
+        .container {
+            
+            padding: 20px;
+        }
     .card {
       border: 1px solid #ccc;
       padding: 20px;
@@ -44,22 +66,255 @@
       cursor: pointer;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
+    .swipe-left { background-color: #6e38b5; color: white; }
+    .swipe-right { background-color: #6e38b5; color: white; }
+    .like {background-color: pink; /* Red */ color: white; }
+    .liked {background-color: #8B0000; /* Dark Red */ color: white; }
     .swipe-left { background-color: #4CAF50; color: white; }
     .swipe-right { background-color: #4CAF50; color: white; }
     .like { background-color: #ff4081; color: white; }
+
+    .recommendation-item {
+  background-color: rgba(255, 255, 255, 0.1); /* optional slight background */
+  padding: 15px;
+  margin: 15px 0; /* THIS adds vertical space */
+  border-radius: 10px;
+  text-align: center;
+}
+    .report-btn {
+      position: absolute;
+      top: 100px;
+      left: 10px;
+      background-color: #ff5252;
+      color: white;
+      padding: 5px 10px;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    
+    /* Report Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      width: 80%;
+      max-width: 500px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: #000;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .form-group textarea {
+      height: 120px;
+      resize: vertical;
+    }
+    .submit-btn {
+      background-color: #8672FF;
+      color: white;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .message {
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
   </style>
 </head>
 <body>
-
-  <h1>Explore Profiles</h1>
+  <div class="navbar">
+    <a href="/">Home</a>
+    <a href="/login.html">Login</a>
+    <a href="/about">About</a>
+    <a href="/Profile">Profile</a>
+    <a href="/admin">Admin</a>
+    <a href="explore.html">Explore</a>
+  </div>
 
   <div class="card" id="profileCard">Loading profiles...</div>
 
   <div class="btns">
     <button class="swipe-left" onclick="prevProfile()">⬅️ Swipe Left</button>
-    <button class="like" onclick="likeProfile()">❤️ Like</button>
+    <button id="likeBtn" class="like" onclick="likeProfile()">Like</button>
     <button class="swipe-right" onclick="nextProfile()">➡️ Swipe Right</button>
   </div>
+
+  <div class="container">  
+  
+    <button id="recommendationsBtn" class="recommendations-btn">Show Recommendations</button>
+  
+    <div id="recommendationsList" class="recommendations-list"></div>
+  </div>
+
+  <script src="swiper.js"></script>
+
+  <script>
+    let recommendationsVisible = false; // Track if recommendations are shown
+  
+    document.getElementById('recommendationsBtn').addEventListener('click', async () => {
+  const listDiv = document.getElementById('recommendationsList');
+
+  if (recommendationsVisible) {
+    listDiv.innerHTML = '';
+    recommendationsVisible = false;
+    document.getElementById('recommendationsBtn').innerText = 'Show Recommendations';
+  } else {
+    const username = localStorage.getItem('username');
+    const userId = localStorage.getItem('userId'); // <--- Make sure you also save this at login!
+
+    if (!username || !userId) {
+      alert('Please log in to see recommendations.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/users/recommendations?username=${username}`);
+      const data = await res.json();
+
+      listDiv.innerHTML = '';
+
+      if (!data.recommendations || data.recommendations.length === 0) {
+        listDiv.innerHTML = '<p>No users found with shared hobbies.</p>';
+      } else {
+        data.recommendations.forEach(user => {
+          const item = document.createElement('div');
+          item.className = 'recommendation-item';
+          item.innerHTML = `
+            <strong>@${user.username}</strong><br>
+            <small>Hobbies: ${user.hobbies.join(', ')}</small><br>
+            <button class="like-btn" data-userid="${user.id}">❤️ Like</button>
+          `;
+          listDiv.appendChild(item);
+        });
+
+        // Attach event listeners to each Like button
+        document.querySelectorAll('.like-btn').forEach(btn => {
+          btn.addEventListener('click', async (event) => {
+            const toUserId = btn.getAttribute('data-userid');
+
+            try {
+              const likeRes = await fetch('/api/matches/like', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fromUserId: userId, toUserId })
+              });
+
+              const likeData = await likeRes.json();
+              if (likeData.liked) {
+                btn.innerText = '💔 Unlike'; // Toggle button text
+              } else {
+                btn.innerText = '❤️ Like';
+              }
+            } catch (error) {
+              console.error('Error sending like:', error);
+            }
+          });
+        });
+      }
+
+      recommendationsVisible = true;
+      document.getElementById('recommendationsBtn').innerText = 'Hide Recommendations';
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      listDiv.innerHTML = '<p>Error loading recommendations.</p>';
+    }
+  }
+});
+
+  </script>
+
+  <script>
+    const username = localStorage.getItem('username');
+    if (username) {
+        document.getElementById('logout-btn').style.display = 'inline-block'; // Forces logout button to be hidden if user is logged out
+        document.getElementById('login-btn').style.display = 'none'; // Forces login to be hidden if user is logged in
+    }
+    function logout() {
+        localStorage.removeItem('username'); // Clear login state
+        window.location.href = '/login.html'; // Redirect to login
+    }
+    </script>
+
+<!-- Report Modal -->
+<div id="reportModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeReportModal()">&times;</span>
+    <h2>Report User</h2>
+    
+    <div id="successMessage" class="message success"></div>
+    <div id="errorMessage" class="message error"></div>
+    
+    <form id="reportForm">
+      <div class="form-group">
+        <label for="reportedUser">Reporting User:</label>
+        <input type="text" id="reportedUser" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #f5f5f5;">
+      </div>
+      
+      <div class="form-group">
+        <label for="reportReason">Reason for Report:</label>
+        <select id="reportReason" required>
+          <option value="">Select a reason</option>
+          <option value="Inappropriate content">Inappropriate content</option>
+          <option value="Harassment">Harassment or bullying</option>
+          <option value="Fake profile">Fake profile</option>
+          <option value="Spam">Spam or scam</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="reportDetails">Additional Details:</label>
+        <textarea id="reportDetails" placeholder="Please provide more specific details about the issue..."></textarea>
+      </div>
+      
+      <button type="submit" class="submit-btn">Submit Report</button>
+    </form>
+  </div>
+</div>
 
   <script src="swiper.js"></script>
 </body>

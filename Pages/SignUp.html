@@ -7,6 +7,47 @@
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="validation.js" defer></script>
 </head>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+    
+        const username = document.getElementById('username-input').value;
+        const password = document.getElementById('password-input').value;
+        const repeatPassword = document.getElementById('repeat-password-input').value;
+        const errorMsg = document.getElementById('error-message');
+    
+        if (password !== repeatPassword) {
+          errorMsg.textContent = "Passwords do not match.";
+          return;
+        }
+    
+        try {
+          const res = await fetch('http://localhost:3000/api/users/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+    
+          const data = await res.json();
+    
+          if (res.ok) {
+            localStorage.clear();
+            localStorage.setItem('userId', data.userId); 
+            localStorage.setItem('username', username);
+            window.location.href = 'profile.html';
+          } else {
+            errorMsg.textContent = data.message || 'Signup failed.';
+          }
+        } catch (err) {
+          console.error('Signup error:', err);
+          errorMsg.textContent = 'Something went wrong during signup.';
+        }
+      });
+    });
+    </script>
+
 <body>
     <div class="wrapper">
         <h1>DuoQue</h1>

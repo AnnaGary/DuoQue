@@ -26,7 +26,8 @@ describe('Server Endpoints', () => {
     expect(res.statusCode).toBe(404);
   });
 
-  test('PUT /api/users/login should return 405 or 404', async () => {
+
+    test('PUT /api/users/login should return 405 or 404', async () => {
     const res = await request('http://localhost:3000')
       .put('/api/users/login')
       .send({ username: 'user', password: 'pass' });

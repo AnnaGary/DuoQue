@@ -7,6 +7,42 @@
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="validation.js" defer></script>
 </head>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username-input').value;
+    const password = document.getElementById('password-input').value;
+    const errorMsg = document.getElementById('error-message');
+
+    try {
+      const res = await fetch('http://localhost:3000/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.clear();
+        localStorage.setItem('userId', data.user.id);
+        localStorage.setItem('username', data.user.username);
+        alert('Login successful!');
+        window.location.href = 'explore.html';
+      } else {
+        errorMsg.textContent = data.message || 'Login failed.';
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      errorMsg.textContent = 'An error occurred during login.';
+    }
+  });
+});
+    </script>
+
 <body>
     <div class="wrapper">
         <h1>Login</h1>

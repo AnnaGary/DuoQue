@@ -25,6 +25,8 @@ What is tested?
 
 	signup.test.js: partially created, Tests new user creation
 
+	ui_button: Tests basic GUI function
+
 Known Limitations?
 
 	No automated tests yet for /profile /update-bio /update-hobbies
